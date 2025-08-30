@@ -11,10 +11,10 @@ services:
     environment:
       - MYSQL_USER=dailyfeed
       - MYSQL_USER_HOST=%
-      - MYSQL_PASSWORD=pressF5!!!
+      - MYSQL_PASSWORD=hitEnter!!!
       - MYSQL_DATABASE=dailyfeed
       - MYSQL_ROOT_HOST=%
-      - MYSQL_ROOT_PASSWORD=pressF5!!!
+      - MYSQL_ROOT_PASSWORD=hitEnter!!!
       - TZ=UTC
     command:
       - --character-set-server=utf8mb4
@@ -28,7 +28,9 @@ services:
     environment:
       MONGO_INITDB_DATABASE: dailyfeed
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: pressF5!!!
+      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
   redis-booksfeed:
     image: redis:7.0
     command: redis-server --port 6379
