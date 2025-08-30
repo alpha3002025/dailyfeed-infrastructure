@@ -1,0 +1,52 @@
+services:
+  mysql-dailyfeed:
+    image: mysql:8.0.38-debian
+    platform: linux/amd64  # ARM64 호환성을 위한 플랫폼 지정
+    restart: always
+    #    command: --lower_case_table_names=1
+    container_name: mysql-dailyfeed
+    hostname: mysql-dailyfeed
+    ports:
+      - "23306:3306"
+    environment:
+      - MYSQL_USER=dailyfeed
+      - MYSQL_USER_HOST=%
+      - MYSQL_PASSWORD=pressF5!!!
+      - MYSQL_DATABASE=dailyfeed
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=pressF5!!!
+      - TZ=UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./init/:/docker-entrypoint-initdb.d/
+  mongo-dailyfeed:
+    image: mongo:6.0.5
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_DATABASE: dailyfeed
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: pressF5!!!
+  redis-booksfeed:
+    image: redis:7.0
+    command: redis-server --port 6379
+    hostname: redis-booksfeed-localhost
+    labels:
+      - "name=redis"
+      - "mode=standalone"
+    ports:
+      - 26379:6379
+    depends_on: 
+      - redis-booksfeed-commander
+    links:
+      - redis-booksfeed-commander
+  redis-booksfeed-commander:
+    image: rediscommander/redis-commander:latest
+    hostname: redis-commander-localhost
+    restart: always
+    environment:
+      - REDIS_HOSTS=redis-booksfeed-localhost
+    ports:
+      - 38081:8081
