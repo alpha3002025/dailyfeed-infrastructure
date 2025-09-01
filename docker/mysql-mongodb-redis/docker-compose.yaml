@@ -22,7 +22,7 @@ services:
     volumes:
       - ./init/:/docker-entrypoint-initdb.d/
   mongo-dailyfeed-1:
-    image: mongo:7.0
+    image: percona/percona-server-mongodb:7.0
     container_name: mongo_dailyfeed_1
     hostname: mongo_dailyfeed_1
     command: mongod --replSet rs0 --bind_ip_all
@@ -30,12 +30,16 @@ services:
       - "27017:27017"
     volumes:
       - ./mongo-dailyfeed-1-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: dailyfeed
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
     networks:
       mongo-cluster:
         aliases:
           - mongo_dailyfeed_1
   mongo-dailyfeed-2:
-    image: mongo:7.0
+    image: percona/percona-server-mongodb:7.0
     container_name: mongo_dailyfeed_2
     hostname: mongo_dailyfeed_2
     command: mongod --replSet rs0 --bind_ip_all
@@ -43,12 +47,16 @@ services:
       - "27018:27017"
     volumes:
       - ./mongo-dailyfeed-2-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: dailyfeed
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
     networks:
       mongo-cluster:
         aliases:
           - mongo_dailyfeed_2
   mongo-dailyfeed-3:
-    image: mongo:7.0
+    image: percona/percona-server-mongodb:7.0
     container_name: mongo_dailyfeed_3
     hostname: mongo_dailyfeed_3
     command: mongod --replSet rs0 --bind_ip_all
@@ -56,13 +64,17 @@ services:
       - "27019:27017"
     volumes:
       - ./mongo-dailyfeed-3-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: dailyfeed
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
     networks:
       mongo-cluster:
         aliases:
           - mongo_dailyfeed_3
   # Replica Set 초기화를 위한 임시 컨테이너
   mongo-setup:
-    image: mongo:7.0
+    image: percona/percona-server-mongodb:7.0
     container_name: mongo_setup
     depends_on:
       - mongo-dailyfeed-1
