@@ -1,1 +1,4 @@
-!**/mysql-mongodb-redis/**/*-data/
+!**/mysql-mongodb-redis/mongo-dailyfeed-1-data
+!**/mysql-mongodb-redis/mongo-dailyfeed-2-data
+!**/mysql-mongodb-redis/mongo-dailyfeed-3-data
+!**/mysql-mongodb-redis/keyfile.txt

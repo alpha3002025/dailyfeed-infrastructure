@@ -21,34 +21,84 @@ services:
       - --collation-server=utf8mb4_unicode_ci
     volumes:
       - ./init/:/docker-entrypoint-initdb.d/
-  mongo-dailyfeed:
-    image: mongo:6.0.5
+  mongo-dailyfeed-1:
+    image: mongo:7.0
+    container_name: mongo_dailyfeed_1
+    hostname: mongo_dailyfeed_1
+    command: mongod --replSet rs0 --bind_ip_all
     ports:
-      - 27017:27017
-    environment:
-      MONGO_INITDB_DATABASE: dailyfeed
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
+      - "27017:27017"
     volumes:
-      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-  redis-booksfeed:
+      - ./mongo-dailyfeed-1-data:/data/db
+    networks:
+      mongo-cluster:
+        aliases:
+          - mongo_dailyfeed_1
+  mongo-dailyfeed-2:
+    image: mongo:7.0
+    container_name: mongo_dailyfeed_2
+    hostname: mongo_dailyfeed_2
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./mongo-dailyfeed-2-data:/data/db
+    networks:
+      mongo-cluster:
+        aliases:
+          - mongo_dailyfeed_2
+  mongo-dailyfeed-3:
+    image: mongo:7.0
+    container_name: mongo_dailyfeed_3
+    hostname: mongo_dailyfeed_3
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./mongo-dailyfeed-3-data:/data/db
+    networks:
+      mongo-cluster:
+        aliases:
+          - mongo_dailyfeed_3
+  # Replica Set 초기화를 위한 임시 컨테이너
+  mongo-setup:
+    image: mongo:7.0
+    container_name: mongo_setup
+    depends_on:
+      - mongo-dailyfeed-1
+      - mongo-dailyfeed-2
+      - mongo-dailyfeed-3
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: [ "bash", "/scripts/init-replica.sh" ]
+    networks:
+      - mongo-cluster
+  redis-dailyfeed:
     image: redis:7.0
     command: redis-server --port 6379
-    hostname: redis-booksfeed-localhost
+    hostname: redis-dailyfeed-localhost
     labels:
       - "name=redis"
       - "mode=standalone"
     ports:
       - 26379:6379
     depends_on: 
-      - redis-booksfeed-commander
+      - redis-dailyfeed-commander
     links:
-      - redis-booksfeed-commander
-  redis-booksfeed-commander:
+      - redis-dailyfeed-commander
+  redis-dailyfeed-commander:
     image: rediscommander/redis-commander:latest
     hostname: redis-commander-localhost
     restart: always
     environment:
-      - REDIS_HOSTS=redis-booksfeed-localhost
+      - REDIS_HOSTS=redis-dailyfeed-localhost
     ports:
       - 38081:8081
+volumes:
+  mongo-dailyfeed-1-data:
+  mongo-dailyfeed-2-data:
+  mongo-dailyfeed-3-data:
+
+networks:
+  mongo-cluster:
+    driver: bridge
