@@ -14,10 +14,10 @@ create table if not exists dailyfeed.member
     password           varchar(50)  null,
     name               varchar(100) null,
     roles              varchar(100) null,
-    created_date       datetime     null,
-    last_modified_date datetime     null,
+    created_at         datetime     null,
+    updated_at         datetime     null,
     constraint member_unique_email
-        unique (email)
+    unique (email)
 );
 
 -- member_follow
@@ -39,8 +39,8 @@ create table if not exists dailyfeed.comments
     is_deleted tinyint(1) null,
     depth      int(11) null,
     like_count bigint     null,
-    created_date       datetime     null,
-    last_modified_date datetime     null
+    created_at datetime     null,
+    updated_at datetime     null
 );
 
 -- posts
@@ -53,8 +53,8 @@ create table if not exists dailyfeed.posts
     view_count         bigint       null,
     like_count         bigint       null,
     is_deleted         tinyint(1)   null,
-    created_date       datetime     null,
-    last_modified_date datetime     null
+    created_at         datetime     null,
+    updated_at         datetime     null
 );
 
 create table if not exists post_latest_activity (
@@ -76,11 +76,11 @@ create table if not exists post_activity_history
     member_id     bigint      not null,
     post_id       bigint      not null,
     activity_type varchar(40) not null,
-    created_date  datetime    not null
+    created_at  datetime    not null
 );
 
 -- jwt_keys
-create table dailyfeed.jwt_keys
+create table if not exists dailyfeed.jwt_keys
 (
     id                 bigint auto_increment PRIMARY KEY,
     key_id             varchar(255) null,
@@ -88,6 +88,6 @@ create table dailyfeed.jwt_keys
     is_active          tinyint(1)   not null,
     expires_at         datetime     null,
     is_primary         tinyint(1)   not null,
-    created_date       datetime     null,
-    last_modified_date datetime     null
+    created_at       datetime     null,
+    updated_at datetime     null
 );
