@@ -3,7 +3,7 @@ install
 source create-cluster.sh
 ```
 
-remove
+uninstall
 - Orbstack 또는 Docker Desktop 에서 삭제
 
 
