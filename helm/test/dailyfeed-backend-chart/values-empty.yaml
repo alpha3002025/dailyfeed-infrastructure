@@ -1,0 +1,42 @@
+profile: dev
+imageTag: 0.0.1
+appName: dailyfeed-backend
+replicas: 1
+envValues: [] ## (1) 각 서비스마다 필요에 따라 다르게 지정
+configSecretItems: [] ## (2) 각 서비스마다 필요에 따라 다르게 지정
+resources:
+  memory:
+    requests: "500Mi"
+    limits: "1Gi"
+  cpu:
+    requests: "500m"
+    limits: "1000m"
+porbeValues:
+  readiness:
+    httpGetPath: /healthcheck/ready
+    httpGetPort: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  liveness:
+    httpGetPath: /healthcheck/live
+    httpGetPort: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 1
+    successThreshold: 1
+    failureThreshold: 7
+  startup:
+    httpGetPath: /healthcheck/startup
+    httpGetPort: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+persistence:
+  enabled: false ## (3) 기본값은 false 로 지정, 필요한 서비스에서만 helm cli 로 persistence.enabled=true 로 지정해서 배포
+  storageClass: test-sc
+  storageRequest: "1Gi"
+  accessModes:
+  - ReadWriteOnce
+  mountPath: /image

@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.appName }}
+  name: {{ .Values.appName }}
+  namespace: dailyfeed-dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  strategy: 
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      containers:
+      - image: alpha300uk/{{ .Values.appName }}-svc
+        name: {{ .Values.appName }}
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: {{ .Values.profile }}
+        {{- with .Values.envValues }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.configSecretItems}}
+        envFrom:
+          {{- range .Values.configSecretItems }}
+          - configMapRef:
+              name: {{ . | trimSuffix "-nosecret" }}-config
+          {{- if not (hasSuffix "-nosecret" .)}}
+          - secretRef:
+              name: {{ . }}-secret
+          {{- end}}
+          {{- end}}
+        {{- end}}
+        resources: 
+          requests:
+            memory: {{ .Values.resources.memory.requests }}
+            cpu: {{ .Values.resources.cpu.requests }}
+          limits:
+            memory: {{ .Values.resources.memory.limits }}
+            cpu: {{ .Values.resources.cpu.limits }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 10"]
+        {{- with .Values.porbeValues.readiness }}
+        readinessProbe:
+          httpGet:
+            path: {{ .httpGetPath }}
+            port: {{ .httpGetPort }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          successThreshold: {{ .successThreshold }}
+          failureThreshold: {{ .failureThreshold }}
+        {{- end }}
+        {{- with .Values.porbeValues.liveness }}
+        livenessProbe:
+          httpGet:
+            path: {{ .httpGetPath }}
+            port: {{ .httpGetPort }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          failureThreshold: {{ .failureThreshold }}
+        {{- end}}
+        {{- with .Values.porbeValues.startup}}
+        startupProbe:
+          httpGet:
+            path: {{ .httpGetPath }}
+            port: {{ .httpGetPort }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          failureThreshold: {{ .failureThreshold }}
+        {{- end}}
+status: {}
