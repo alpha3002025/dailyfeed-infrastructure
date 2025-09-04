@@ -1,0 +1,32 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 30080 ## 애플리케이션
+        hostPort: 30080
+        protocol: TCP
+      - containerPort: 31000 ## Kiali
+        hostPort: 31000
+        protocol: TCP
+      - containerPort: 31001 ## Jaeger UI
+        hostPort: 31001
+        protocol: TCP
+      - containerPort: 31380 ## Istio Ingress Gateway
+        hostPort: 31380
+        protocol: TCP
+      - containerPort: 32001 ## Test mTLS
+        hostPort: 32001
+        protocol: TCP
+      - containerPort: 80 # nginx-ingress 가 인식하는 포트
+        hostPort: 80 # API 접속시 호스트 PC 의 80 포트로 접속
+        protocol: TCP
+  - role: worker
+# - role: worker ## 필요하다면 추가
+# - role: worker ## 필요하다면 추가
