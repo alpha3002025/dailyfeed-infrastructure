@@ -21,4 +21,8 @@ pod/testnginx created
 kubectl get po
 NAME        READY   STATUS              RESTARTS   AGE
 testnginx   0/1     ContainerCreating   0          5s
+
+## testnginx pod 삭제
+kubectl delete po testnginx
+pod "testnginx" deleted
 ```
