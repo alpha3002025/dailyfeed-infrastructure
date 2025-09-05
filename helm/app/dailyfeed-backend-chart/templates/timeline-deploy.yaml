@@ -31,8 +31,10 @@ spec:
         {{- if .Values.configSecretItems}}
         envFrom:
           {{- range .Values.configSecretItems }}
+          {{- if not (hasSuffix "-noconfig")}}
           - configMapRef:
               name: {{ . | trimSuffix "-nosecret" }}-config
+          {{- end}}
           {{- if not (hasSuffix "-nosecret" .)}}
           - secretRef:
               name: {{ . }}-secret
