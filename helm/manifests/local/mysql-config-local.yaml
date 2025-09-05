@@ -4,5 +4,6 @@ metadata:
   name: mysql-config
   namespace: dailyfeed
 data:
-  MYSQL_HOST: localhost
+  MYSQL_HOST: mysql.infra.svc.cluster.local
+  MYSQL_PORT: 3306
   MYSQL_SCHEMA: dailyfeed
