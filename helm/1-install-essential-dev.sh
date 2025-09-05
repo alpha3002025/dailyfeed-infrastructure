@@ -8,3 +8,5 @@ kubectl apply -f manifests/dev/dev-config-secret.yaml
 cd kafka_redis
 source setup.sh
 cd ..
+## install mysql
+kubectl apply -n infra -f kafka_redis_mysql/dev-mysql-service.yaml
