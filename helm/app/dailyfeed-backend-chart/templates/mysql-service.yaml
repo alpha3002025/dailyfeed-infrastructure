@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: dailyfeed-mysql
-  namespace: local
-spec:
-  type: ExternalName
-  externalName: 127.0.0.1:23306
-## mysql 의 경우 chart 에 넣

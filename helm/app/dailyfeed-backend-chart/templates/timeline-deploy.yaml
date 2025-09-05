@@ -4,7 +4,7 @@ metadata:
   labels:
     app: {{ .Values.appName }}
   name: {{ .Values.appName }}
-  namespace: dailyfeed-dev
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: 2
   selector:
@@ -31,10 +31,8 @@ spec:
         {{- if .Values.configSecretItems}}
         envFrom:
           {{- range .Values.configSecretItems }}
-          {{- if not (hasSuffix "-noconfig")}}
           - configMapRef:
               name: {{ . | trimSuffix "-nosecret" }}-config
-          {{- end}}
           {{- if not (hasSuffix "-nosecret" .)}}
           - secretRef:
               name: {{ . }}-secret

@@ -1,0 +1,63 @@
+profile: dev
+namespace: dailyfeed
+imageTag: 0.0.1
+appName: dailyfeed-backend
+replicas: 1
+envValues:
+- name: MONGODB_URI
+  value: mongodb+srv://<atlas 접속 URL>
+- name: MYSQL_USERNAME
+  value: dailyfeed
+- name: MYSQL_PASSWORD
+  value: hitEnter!!!
+- name: MYSQL_SCHEMA
+  value: dailyfeed
+- name: REDIS_HOST
+  value: redis-dev.dev.svc.cluster.local
+- name: REDIS_PORT
+  value: 26379
+- name: KAFKA_SERVER
+  value: kafka.dev.svc.cluster.local
+- name: MEMBER_SERVICE_URL
+  value: http://dailyfeed-member-svc.dev.svc.cluster.local
+- name: TIMELINE_SERVICE_URL
+  value: http://dailyfeed-timeline-svc.dev.svc.cluster.local
+- name: SEARCH_SERVICE_URL
+  value: http://dailyfeed-search-svc.dev.svc.cluster.local
+- name: CONTENT_SERVICE_URL
+  value: http://dailyfeed-content-svc.dev.svc.cluster.local
+configSecretItems:
+- kafka
+- redis-nosecret
+- mysql
+- mongodb
+resources:
+  memory:
+    requests: "500Mi"
+    limits: "1Gi"
+  cpu:
+    requests: "500m"
+    limits: "1000m"
+porbeValues:
+  readiness:
+    httpGetPath: /healthcheck/ready
+    httpGetPort: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  liveness:
+    httpGetPath: /healthcheck/live
+    httpGetPort: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 1
+    successThreshold: 1
+    failureThreshold: 7
+  startup:
+    httpGetPath: /healthcheck/startup
+    httpGetPort: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+    

@@ -1,35 +1,10 @@
-profile: dev
+profile: local
+namespace: dailyfeed
 imageTag: 0.0.1
 appName: dailyfeed-backend
 replicas: 1
-envValues:
-- name: MONGODB_URI
-  value: mongodb+srv://<atlas 접속 URL>
-- name: MYSQL_USERNAME
-  value: dailyfeed
-- name: MYSQL_PASSWORD
-  value: hitEnter!!!
-- name: MYSQL_SCHEMA
-  value: dailyfeed
-- name: REDIS_HOST
-  value: redis-dev.dev.svc.cluster.local
-- name: REDIS_PORT
-  value: 26379
-- name: KAFKA_SERVER
-  value: kafka.dev.svc.cluster.local
-- name: MEMBER_SERVICE_URL
-  value: http://dailyfeed-member-svc.dev.svc.cluster.local
-- name: TIMELINE_SERVICE_URL
-  value: http://dailyfeed-timeline-svc.dev.svc.cluster.local
-- name: SEARCH_SERVICE_URL
-  value: http://dailyfeed-search-svc.dev.svc.cluster.local
-- name: CONTENT_SERVICE_URL
-  value: http://dailyfeed-content-svc.dev.svc.cluster.local
-configSecretItems:
-- kafka
-- redis-nosecret
-- mysql
-- mongodb
+envValues: [] ## (1) 각 서비스마다 필요에 따라 다르게 지정
+configSecretItems: [] ## (2) 각 서비스마다 필요에 따라 다르게 지정
 resources:
   memory:
     requests: "500Mi"
@@ -59,4 +34,10 @@ porbeValues:
     periodSeconds: 1
     successThreshold: 1
     failureThreshold: 3
-    
+persistence:
+  enabled: false ## (3) 기본값은 false 로 지정, 필요한 서비스에서만 helm cli 로 persistence.enabled=true 로 지정해서 배포
+  storageClass: test-sc
+  storageRequest: "1Gi"
+  accessModes:
+  - ReadWriteOnce
+  mountPath: /image
