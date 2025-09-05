@@ -26,6 +26,19 @@ source 1-uninstall-essential-dev.sh
 ```
 <br/>
 
+# check
+kafka, redis, mysql(service)
+```bash
+kubectl get all -n infra
+```
+
+configmap, secret
+```bash
+kubectl get all -n dailyfeed
+```
+<br/>
+
+
 
 # mysql
 - local: helm/docker-compose (가급적 helm 기반으로 해주시기 바랍니다.)
@@ -37,15 +50,15 @@ infra 네임스페이스에 `dailyfeed-mysql` 에 url 연결
 apiVersion: v1
 kind: Service
 metadata:
-  name: dailyfeed-mysql
+  name: mysql
   namespace: infra
 spec:
   type: ExternalName
   externalName: [rds 주소 or localhost]
 ```
-- local, dev 클러스터 각각에서 `dailyfeed-mysql` 을 기동시켜줘야합니다. 
+- local, dev 클러스터 각각에서 `mysql` 서비스를 expose 해줘야 합니다. local 클러스터의 경우에는 helm mysql 을 통해 mysql 을 직접 설치해야 합니다. (설치스크립트에 포함)  
 - 각각의 APPLICATION 에서는 configmap, secret 으로 환경변수를 통해 MYSQL 주소를 가져올수는 있지만 ... 
-- MYSQL 주소의 경우 가급적 이 `dailyfeed-mysql-service.yaml` 을 통해 생성한 `dailyfeed-mysql.infra.svc.cluster.local` 을 사용하는 것이 infrastructure 변경에 의존하지 않은 개발을 할수 있습니다.
+- MYSQL 주소의 경우 가급적 이 `local|dev-mysql-service.yaml` 을 통해 생성한 `mysql.infra.svc.cluster.local` 을 사용하는 것이 infrastructure 변경에 의존하지 않은 개발을 할수 있습니다.
 - password, username 등은 Secret 을 통해, schema 는 Configmap 을 통해 가져오면 됩니다.
 
 <br/>
