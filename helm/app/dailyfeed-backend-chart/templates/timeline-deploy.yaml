@@ -18,7 +18,7 @@ spec:
         app: {{ .Values.appName }}
     spec:
       containers:
-      - image: alpha300uk/{{ .Values.appName }}-svc
+      - image: alpha300uk/{{ .Values.appName }}-svc:{{ .Values.imageTag }}
         name: {{ .Values.appName }}
         ports:
         - containerPort: 8080
