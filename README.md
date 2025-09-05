@@ -1,3 +1,32 @@
+# install
+local
+```bash
+cd helm
+source 1-install-essential-local.sh
+```
+
+dev
+```bash
+cd helm
+source 1-install-essential-dev.sh
+```
+<br/>
+
+# uninstall
+local
+```bash
+cd helm
+source 1-uninstall-essential-local.sh
+```
+
+dev
+```bash
+cd helm
+source 1-uninstall-essential-dev.sh
+```
+<br/>
+
+
 # mysql
 - local: helm/docker-compose (가급적 helm 기반으로 해주시기 바랍니다.)
 - dev: rds
