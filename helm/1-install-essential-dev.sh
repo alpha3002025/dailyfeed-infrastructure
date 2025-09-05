@@ -6,7 +6,7 @@ kubectl create ns infra
 kubectl apply -f manifests/dev/dev-config-secret.yaml
 ## install kafka, redis
 cd kafka_redis
-source setup.sh
+source dev-setup.sh
 cd ..
 ## install mysql
 kubectl apply -n infra -f kafka_redis_mysql/dev-mysql-service.yaml
