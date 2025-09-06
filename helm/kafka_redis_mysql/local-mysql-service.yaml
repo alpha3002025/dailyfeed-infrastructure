@@ -5,4 +5,7 @@ metadata:
   namespace: infra
 spec:
   type: ExternalName
-  externalName: host.orbstack.internal
+  externalName: mysql.infra.svc.cluster.local
+  ports:
+  - port: 3306
+    targetPort: 3306
