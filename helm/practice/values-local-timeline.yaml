@@ -1,3 +1,4 @@
+profile: local
 namespace: dailyfeed
 imageTag: 0.0.1
 appName: dailyfeed-backend
@@ -38,5 +39,5 @@ persistence:
   storageClass: test-sc
   storageRequest: "1Gi"
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   mountPath: /image

@@ -4,4 +4,4 @@ metadata:
   name: mongodb-config
   namespace: dailyfeed
 data:
-  MONGODB_DATABASE: dailyfeed
+  MONGODB_DATABASE: "dailyfeed"

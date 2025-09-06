@@ -7,14 +7,14 @@ services:
     container_name: mysql-dailyfeed
     hostname: mysql-dailyfeed
     ports:
-      - "23306:3306"
+      - "3306:3306"
     environment:
       - MYSQL_USER=dailyfeed
       - MYSQL_USER_HOST=%
-      - MYSQL_PASSWORD=hitEnter!!!
+      - MYSQL_PASSWORD=hitEnter@@@
       - MYSQL_DATABASE=dailyfeed
       - MYSQL_ROOT_HOST=%
-      - MYSQL_ROOT_PASSWORD=hitEnter!!!
+      - MYSQL_ROOT_PASSWORD=hitEnter@@@
       - TZ=UTC
     command:
       - --character-set-server=utf8mb4
@@ -93,7 +93,7 @@ services:
       - "name=redis"
       - "mode=standalone"
     ports:
-      - 26379:6379
+      - 6379:6379
     depends_on: 
       - redis-dailyfeed-commander
     links:
