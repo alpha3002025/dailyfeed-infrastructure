@@ -3,7 +3,10 @@ kubectl create ns dailyfeed
 ## infra
 kubectl create ns infra
 ## install configmap, secret
-kubectl apply -f manifests/dev/dev-config-secret.yaml
+#kubectl apply -f manifests/dev/dev-config-secret.yaml
+cd manifests/dev
+kubectl apply -f .
+cd ../..
 ## install kafka, redis
 cd kafka_redis
 source dev-setup.sh

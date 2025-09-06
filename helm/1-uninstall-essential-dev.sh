@@ -1,5 +1,8 @@
 ## remove configmap, secret
-kubectl delete -f manifests/dev/dev-config-secret.yaml
+#kubectl delete -f manifests/dev/dev-config-secret.yaml
+cd manifests/dev
+kubectl delete -f .
+cd ../..
 ## uninstall kafka, redis
 helm uninstall -n infra redis
 helm uninstall -n infra kafka

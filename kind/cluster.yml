@@ -24,6 +24,15 @@ nodes:
       - containerPort: 32001 ## Test mTLS
         hostPort: 32001
         protocol: TCP
+      - containerPort: 3306 ## MySQL
+        hostPort: 3306
+        protocol: TCP
+      - containerPort: 6379 ## redis
+        hostPort: 6379
+        protocol: TCP
+      - containerPort: 9092 ## kafka
+        hostPort: 9092
+        protocol: TCP
       - containerPort: 80 # nginx-ingress 가 인식하는 포트
         hostPort: 80 # API 접속시 호스트 PC 의 80 포트로 접속
         protocol: TCP
