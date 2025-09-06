@@ -7,3 +7,4 @@ data:
   MYSQL_HOST: [rds 주소 입력]
   MYSQL_PORT: 3306
   MYSQL_SCHEMA: dailyfeed
+  MYSQL_JDBC_URL: "jdbc:mysql://mysql.infra.svc.cluster.local:3306/dailyfeed?characterEncoding=UTF-8&serverTimezone=UTC&rewriteBatchedStatements=true"

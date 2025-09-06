@@ -2,8 +2,8 @@ namespace: dailyfeed
 imageTag: 0.0.1
 appName: dailyfeed-backend
 replicas: 1
-envValues: [] ## (1) 각 서비스마다 필요에 따라 다르게 지정
-configSecretItems: [] ## (2) 각 서비스마다 필요에 따라 다르게 지정
+envValues: []
+configSecretItems: []
 resources:
   memory:
     requests: "500Mi"
@@ -34,7 +34,7 @@ porbeValues:
     successThreshold: 1
     failureThreshold: 3
 persistence:
-  enabled: false ## (3) 기본값은 false 로 지정, 필요한 서비스에서만 helm cli 로 persistence.enabled=true 로 지정해서 배포
+  enabled: false
   storageClass: test-sc
   storageRequest: "1Gi"
   accessModes:
