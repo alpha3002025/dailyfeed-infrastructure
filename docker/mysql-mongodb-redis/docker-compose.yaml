@@ -120,7 +120,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-dailyfeed:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-dailyfeed:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092,PLAINTEXT_HOST://localhost:39092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -135,6 +135,28 @@ services:
     networks:
       - dailyfeed-network
 
+  # Kafka 토픽 초기화
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-init-dailyfeed
+    depends_on:
+      - kafka-dailyfeed
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # Kafka가 준비될 때까지 대기
+      echo 'Waiting for Kafka to be ready...'
+      cub kafka-ready -b kafka-dailyfeed:29092 1 120
+      
+      # 토픽 생성
+      echo 'Creating topic: post-activity-20250907'
+      kafka-topics --create --if-not-exists --topic post-activity-20250907 --bootstrap-server kafka-dailyfeed:29092 --partitions 3 --replication-factor 1
+      
+      echo 'Topic creation completed!'
+      "
+    networks:
+      - dailyfeed-network
+
   # Kafka UI (선택사항 - Kafka 관리용)
   kafka-ui-dailyfeed:
     image: provectuslabs/kafka-ui:latest
@@ -143,6 +165,7 @@ services:
     restart: always
     depends_on:
       - kafka-dailyfeed
+      - kafka-init
     ports:
       - "38080:8080"
     environment:
