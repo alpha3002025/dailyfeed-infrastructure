@@ -30,6 +30,22 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: {{ .Values.profile }}
+        - name: MYSQL_JDBC_URL
+          value: "jdbc:mysql://mysql.infra.svc.cluster.local:3306/dailyfeed?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8"
+        - name: MYSQL_USERNAME
+          value: "dailyfeed"
+        - name: MYSQL_PASSWORD
+          value: "hitEnter@@@"
+        - name: MYSQL_SCHEMA
+          value: "dailyfeed"
+        - name: REDIS_HOST
+          value: "redis-master.infra.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: KAFKA_HOST
+          value: "kafka.infra.svc.cluster.local"
+        - name: KAFKA_PORT
+          value: "9092"
         {{- with .Values.envValues }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

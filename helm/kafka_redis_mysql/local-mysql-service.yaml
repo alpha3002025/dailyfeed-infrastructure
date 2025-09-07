@@ -4,8 +4,12 @@ metadata:
   name: mysql
   namespace: infra
 spec:
-  type: ExternalName
-  externalName: mysql.infra.svc.cluster.local
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: mysql
+    app.kubernetes.io/name: mysql
   ports:
   - port: 3306
     targetPort: 3306
+    protocol: TCP
+    name: mysql
