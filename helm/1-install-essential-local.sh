@@ -11,12 +11,14 @@ cd ../..
 cd kafka_redis_mysql
 source local-setup.sh
 cd ..
-## install mysql
+
+## networking
 kubectl apply -n infra -f kafka_redis_mysql/local-mysql-service.yaml
+kubectl apply -n infra -f kafka_redis_mysql/local-mongodb-service.yaml
 
-echo "wait 60s (mysql pending) "
-sleep 60
-
-## fort-forwarding
-echo "port-forward -n infra svc/mysql 3306:3306 &"
-kubectl port-forward -n infra svc/mysql 3306:3306 &
+#echo "wait 60s (mysql pending) "
+#sleep 60
+#
+### fort-forwarding
+#echo "port-forward -n infra svc/mysql 3306:3306 &"
+#kubectl port-forward -n infra svc/mysql 3306:3306 &

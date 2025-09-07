@@ -23,6 +23,20 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: {{ .Values.profile }}
+        {{- with .Values.envValues }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.configSecretItems}}
+        envFrom:
+          {{- range .Values.configSecretItems }}
+          - configMapRef:
+              name: {{ . | trimSuffix "-nosecret" }}-config
+          {{- if not (hasSuffix "-nosecret" .)}}
+          - secretRef:
+              name: {{ . }}-secret
+          {{- end}}
+          {{- end}}
+        {{- end}}
       - image: alpha300uk/{{ .Values.appName }}-svc:{{ .Values.imageTag }}
         name: {{ .Values.appName }}
         ports:
@@ -35,7 +49,7 @@ spec:
         - name: MYSQL_USERNAME
           value: "dailyfeed"
         - name: MYSQL_PASSWORD
-          value: "hitEnter@@@"
+          value: "hitEnter###"
         - name: MYSQL_SCHEMA
           value: "dailyfeed"
         - name: REDIS_HOST

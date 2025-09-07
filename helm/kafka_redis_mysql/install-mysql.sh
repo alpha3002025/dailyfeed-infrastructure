@@ -5,9 +5,9 @@ helm repo update
 # MySQL 설치 (initdbScriptsConfigMap 없이)
 helm install mysql bitnami/mysql \
   --namespace infra \
-  --set auth.rootPassword="hitEnter@@@" \
+  --set auth.rootPassword="hitEnter###" \
   --set auth.username="dailyfeed" \
-  --set auth.password="hitEnter@@@" \
+  --set auth.password="hitEnter###" \
   --set auth.database="dailyfeed" \
   --set primary.service.ports.mysql=3306
 
@@ -21,6 +21,6 @@ kubectl cp ddl.sql infra/mysql-0:/tmp/ddl.sql
 
 # DDL 실행
 echo "Executing DDL scripts..."
-kubectl exec mysql-0 -n infra -- bash -c "mysql -uroot -p'hitEnter@@@' dailyfeed < /tmp/ddl.sql"
+kubectl exec mysql-0 -n infra -- bash -c "mysql -uroot -p'hitEnter###' dailyfeed < /tmp/ddl.sql"
 
 echo "MySQL installation and DDL execution completed!"
