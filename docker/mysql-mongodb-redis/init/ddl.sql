@@ -1,0 +1,93 @@
+drop table dailyfeed.member;
+drop table dailyfeed.member_follow;
+drop table dailyfeed.comments;
+drop table dailyfeed.posts;
+drop table dailyfeed.post_latest_activity;
+drop table dailyfeed.post_activity_history;
+drop table dailyfeed.jwt_keys;
+
+-- member
+create table if not exists dailyfeed.member
+(
+    id                 bigint auto_increment PRIMARY KEY,
+    email              varchar(100) null,
+    password           varchar(50)  null,
+    name               varchar(100) null,
+    roles              varchar(100) null,
+    created_at         datetime     null,
+    updated_at         datetime     null,
+    constraint member_unique_email
+    unique (email)
+);
+
+-- member_follow
+create table if not exists dailyfeed.member_follow
+(
+    id           bigint auto_increment PRIMARY KEY,
+    follower_id  bigint null,
+    following_id bigint null
+);
+
+-- comments
+create table if not exists dailyfeed.comments
+(
+    id         bigint auto_increment PRIMARY KEY,
+    content    text       not null,
+    author_id  bigint     not null,
+    post_id    bigint     not null,
+    parent_id  bigint     null,
+    is_deleted tinyint(1) null,
+    depth      int(11) null,
+    like_count bigint     null,
+    created_at datetime     null,
+    updated_at datetime     null
+);
+
+-- posts
+create table if not exists dailyfeed.posts
+(
+    id                 bigint auto_increment PRIMARY KEY,
+    title              varchar(100) null,
+    content            text         null,
+    author_id          bigint       not null,
+    view_count         bigint       null,
+    like_count         bigint       null,
+    is_deleted         tinyint(1)   null,
+    created_at         datetime     null,
+    updated_at         datetime     null
+);
+
+create table if not exists post_latest_activity (
+    id                 bigint auto_increment PRIMARY KEY,
+    member_id          bigint      NOT NULL,
+    post_id            bigint      NOT NULL,
+    activity_type      enum('CREATE', 'UPDATE', 'DELETE') NOT NULL,
+    created_at         datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_post_member (post_id, member_id),
+    KEY idx_member_activity_updated (member_id, activity_type, updated_at DESC),
+    KEY idx_updated (updated_at DESC)  -- 전체 최신 순서 조회용
+);
+
+create table if not exists post_activity_history
+(
+    id            bigint auto_increment PRIMARY KEY,
+    member_id     bigint      not null,
+    post_id       bigint      not null,
+    activity_type varchar(40) not null,
+    created_at  datetime    not null
+);
+
+-- jwt_keys
+create table if not exists dailyfeed.jwt_keys
+(
+    id                 bigint auto_increment PRIMARY KEY,
+    key_id             varchar(255) null,
+    secret_key         varchar(255) not null,
+    is_active          tinyint(1)   not null,
+    expires_at         datetime     null,
+    is_primary         tinyint(1)   not null,
+    created_at       datetime     null,
+    updated_at datetime     null
+);

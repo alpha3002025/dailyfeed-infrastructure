@@ -7,84 +7,151 @@ services:
     container_name: mysql-dailyfeed
     hostname: mysql-dailyfeed
     ports:
-      - "3306:3306"
+      - "23306:3306"
     environment:
       - MYSQL_USER=dailyfeed
       - MYSQL_USER_HOST=%
-      - MYSQL_PASSWORD=hitEnter@@@
+      - MYSQL_PASSWORD=hitEnter###
       - MYSQL_DATABASE=dailyfeed
       - MYSQL_ROOT_HOST=%
-      - MYSQL_ROOT_PASSWORD=hitEnter@@@
+      - MYSQL_ROOT_PASSWORD=hitEnter###
       - TZ=UTC
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     volumes:
       - ./init/:/docker-entrypoint-initdb.d/
-  mongo-dailyfeed-1:
-    image: percona/percona-server-mongodb:7.0
-    container_name: mongo_dailyfeed_1
-    hostname: mongo_dailyfeed_1
-    command: mongod --replSet rs0 --bind_ip_all
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./mongo-dailyfeed-1-data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: dailyfeed
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
     networks:
-      mongo-cluster:
-        aliases:
-          - mongo_dailyfeed_1
-  mongo-dailyfeed-2:
-    image: percona/percona-server-mongodb:7.0
-    container_name: mongo_dailyfeed_2
-    hostname: mongo_dailyfeed_2
-    command: mongod --replSet rs0 --bind_ip_all
-    ports:
-      - "27018:27017"
-    volumes:
-      - ./mongo-dailyfeed-2-data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: dailyfeed
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
-    networks:
-      mongo-cluster:
-        aliases:
-          - mongo_dailyfeed_2
-  mongo-dailyfeed-3:
-    image: percona/percona-server-mongodb:7.0
-    container_name: mongo_dailyfeed_3
-    hostname: mongo_dailyfeed_3
-    command: mongod --replSet rs0 --bind_ip_all
-    ports:
-      - "27019:27017"
-    volumes:
-      - ./mongo-dailyfeed-3-data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: dailyfeed
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
-    networks:
-      mongo-cluster:
-        aliases:
-          - mongo_dailyfeed_3
+      - dailyfeed-network
+
+  #  mongo-dailyfeed-1:
+  #    image: percona/percona-server-mongodb:7.0
+  #    container_name: mongo_dailyfeed_1
+  #    hostname: mongo_dailyfeed_1
+  #    command: mongod --replSet rs0 --bind_ip_all
+  #    ports:
+  #      - "27017:27017"
+  #    volumes:
+  #      - ./mongo-dailyfeed-1-data:/data/db
+  #    environment:
+  #      MONGO_INITDB_DATABASE: dailyfeed
+  #      MONGO_INITDB_ROOT_USERNAME: root
+  #      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
+  #    networks:
+  #      mongo-cluster:
+  #        aliases:
+  #          - mongo_dailyfeed_1
+  #  mongo-dailyfeed-2:
+  #    image: percona/percona-server-mongodb:7.0
+  #    container_name: mongo_dailyfeed_2
+  #    hostname: mongo_dailyfeed_2
+  #    command: mongod --replSet rs0 --bind_ip_all
+  #    ports:
+  #      - "27018:27017"
+  #    volumes:
+  #      - ./mongo-dailyfeed-2-data:/data/db
+  #    environment:
+  #      MONGO_INITDB_DATABASE: dailyfeed
+  #      MONGO_INITDB_ROOT_USERNAME: root
+  #      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
+  #    networks:
+  #      mongo-cluster:
+  #        aliases:
+  #          - mongo_dailyfeed_2
+  #  mongo-dailyfeed-3:
+  #    image: percona/percona-server-mongodb:7.0
+  #    container_name: mongo_dailyfeed_3
+  #    hostname: mongo_dailyfeed_3
+  #    command: mongod --replSet rs0 --bind_ip_all
+  #    ports:
+  #      - "27019:27017"
+  #    volumes:
+  #      - ./mongo-dailyfeed-3-data:/data/db
+  #    environment:
+  #      MONGO_INITDB_DATABASE: dailyfeed
+  #      MONGO_INITDB_ROOT_USERNAME: root
+  #      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
+  #    networks:
+  #      mongo-cluster:
+  #        aliases:
+  #          - mongo_dailyfeed_3
   # Replica Set 초기화를 위한 임시 컨테이너
-  mongo-setup:
-    image: percona/percona-server-mongodb:7.0
-    container_name: mongo_setup
-    depends_on:
-      - mongo-dailyfeed-1
-      - mongo-dailyfeed-2
-      - mongo-dailyfeed-3
+  #  mongo-setup:
+  #    image: percona/percona-server-mongodb:7.0
+  #    container_name: mongo_setup
+  #    depends_on:
+  #      - mongo-dailyfeed-1
+  #      - mongo-dailyfeed-2
+  #      - mongo-dailyfeed-3
+  #    volumes:
+  #      - ./scripts:/scripts
+  #    entrypoint: [ "bash", "/scripts/init-replica.sh" ]
+  #    networks:
+  #      - mongo-cluster
+
+  # Kafka 및 Zookeeper 설정
+  zookeeper-dailyfeed:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper-dailyfeed
+    hostname: zookeeper-dailyfeed
+    restart: always
+    ports:
+      - "22181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     volumes:
-      - ./scripts:/scripts
-    entrypoint: [ "bash", "/scripts/init-replica.sh" ]
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
     networks:
-      - mongo-cluster
+      - dailyfeed-network
+
+  kafka-dailyfeed:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-dailyfeed
+    hostname: kafka-dailyfeed
+    restart: always
+    depends_on:
+      - zookeeper-dailyfeed
+    ports:
+      - "29092:29092"
+      - "39092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-dailyfeed:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-dailyfeed:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - dailyfeed-network
+
+  # Kafka UI (선택사항 - Kafka 관리용)
+  kafka-ui-dailyfeed:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui-dailyfeed
+    hostname: kafka-ui-dailyfeed
+    restart: always
+    depends_on:
+      - kafka-dailyfeed
+    ports:
+      - "38080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: dailyfeed-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-dailyfeed:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper-dailyfeed:2181
+    networks:
+      - dailyfeed-network
+
   redis-dailyfeed:
     image: redis:7.0
     command: redis-server --port 6379
@@ -93,11 +160,14 @@ services:
       - "name=redis"
       - "mode=standalone"
     ports:
-      - 6379:6379
-    depends_on: 
+      - 26379:6379
+    depends_on:
       - redis-dailyfeed-commander
     links:
       - redis-dailyfeed-commander
+    networks:
+      - dailyfeed-network
+
   redis-dailyfeed-commander:
     image: rediscommander/redis-commander:latest
     hostname: redis-commander-localhost
@@ -106,11 +176,19 @@ services:
       - REDIS_HOSTS=redis-dailyfeed-localhost
     ports:
       - 38081:8081
+    networks:
+      - dailyfeed-network
+
 volumes:
   mongo-dailyfeed-1-data:
   mongo-dailyfeed-2-data:
   mongo-dailyfeed-3-data:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
 
 networks:
   mongo-cluster:
+    driver: bridge
+  dailyfeed-network:
     driver: bridge
