@@ -3,7 +3,7 @@ create table if not exists dailyfeed.member
 (
     id                 bigint auto_increment PRIMARY KEY,
     email              varchar(100) null,
-    password           varchar(50)  null,
+    password           varchar(100)  null,
     name               varchar(100) null,
     roles              varchar(100) null,
     created_at         datetime     null,
