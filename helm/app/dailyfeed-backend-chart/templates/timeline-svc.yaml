@@ -2,16 +2,16 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: dailyfeed-timeline-svc
-  name: dailyfeed-timeline-svc
+    app: {{ .Values.appName }}-svc
+  name: {{ .Values.appName }}-svc
   namespace: dailyfeed
 spec:
   ports:
-  - port: 8080
+  - port: {{ .Values.portNumber }}
     protocol: TCP
-    targetPort: 8080
+    targetPort: {{ .Values.portNumber }}
   selector:
-    app: dailyfeed-timeline-svc
+    app: {{ .Values.appName }}-svc
   type: ClusterIP
 status:
   loadBalancer: {}
