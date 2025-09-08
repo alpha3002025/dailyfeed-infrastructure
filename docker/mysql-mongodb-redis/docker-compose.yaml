@@ -20,7 +20,7 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     volumes:
-      - ./init/:/docker-entrypoint-initdb.d/
+      - ./init/ddl.sql:/docker-entrypoint-initdb.d/01-ddl.sql
     networks:
       - dailyfeed-network
 

@@ -1,10 +1,10 @@
-drop table dailyfeed.member;
-drop table dailyfeed.member_follow;
-drop table dailyfeed.comments;
-drop table dailyfeed.posts;
-drop table dailyfeed.post_latest_activity;
-drop table dailyfeed.post_activity_history;
-drop table dailyfeed.jwt_keys;
+drop table if exists dailyfeed.member;
+drop table if exists dailyfeed.member_follow;
+drop table if exists dailyfeed.comments;
+drop table if exists dailyfeed.posts;
+drop table if exists dailyfeed.post_latest_activity;
+drop table if exists dailyfeed.post_activity_history;
+drop table if exists dailyfeed.jwt_keys;
 
 -- member
 create table if not exists dailyfeed.member
