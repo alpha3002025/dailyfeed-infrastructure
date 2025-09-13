@@ -1,13 +1,13 @@
-drop table if exists dailyfeed.member;
-drop table if exists dailyfeed.member_follow;
-drop table if exists dailyfeed.comments;
-drop table if exists dailyfeed.posts;
-drop table if exists dailyfeed.post_latest_activity;
-drop table if exists dailyfeed.post_activity_history;
-drop table if exists dailyfeed.jwt_keys;
+drop table dailyfeed.members;
+drop table dailyfeed.member_follows;
+drop table dailyfeed.member_profiles;
+drop table dailyfeed.member_profile_images;
+drop table dailyfeed.comments;
+drop table dailyfeed.posts;
+drop table dailyfeed.jwt_keys;
 
--- member
-create table if not exists dailyfeed.member
+-- members
+create table if not exists dailyfeed.members
 (
     id                 bigint auto_increment PRIMARY KEY,
     email              varchar(100) null,
@@ -21,12 +21,74 @@ create table if not exists dailyfeed.member
 );
 
 -- member_follow
-create table if not exists dailyfeed.member_follow
+create table if not exists dailyfeed.member_follows
 (
     id           bigint auto_increment PRIMARY KEY,
     follower_id  bigint null,
     following_id bigint null
 );
+
+-- member_profiles
+create table if not exists dailyfeed.member_profiles
+(
+    id                  bigint auto_increment primary key,
+    member_id           bigint null,
+    profile_id          bigint primary key auto_increment,
+    member_id           bigint not null,
+    name                varchar(100) not null,
+    handle              varchar(50) not null unique,
+    display_name        varchar(100), -- 표시용 이름 (이모지, 특수문자 포함 가능)
+    bio text,
+    location            varchar(100),
+    website_url         varchar(500),
+    birth_date          date,
+    gender              varchar(30),    -- 'male', 'female', 'other', 'prefer_not_to_say'
+    timezone            varchar(50) default 'utc',
+    language_code       varchar(10) default 'en',
+    country_code        char(2),
+    verification_status varchar(20),    -- 'none', 'pending', 'verified' default 'none'
+    privacy_level       varchar(20),    -- 'public', 'friends', 'private' default 'public'
+    profile_completion_score tinyint default 0,
+    is_active boolean default true,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp on update current_timestamp,
+
+    index idx_member_id (member_id),
+    index idx_handle (handle),
+    index idx_country_lang (country_code, language_code),
+    index idx_verification (verification_status),
+    index idx_updated_at (updated_at),
+
+    -- FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE
+);
+
+-- member_profile_images
+create table if not exists dailyfeed.member_profile_images
+(
+    image_id            bigint primary key auto_increment,
+    profile_id          bigint not null,
+    image_type          varchar(20), -- 'avatar', 'cover', 'gallery' default 'avatar'
+    image_category      varchar(20) not null, -- 'original', 'small', 'medium', 'large', 'thumbnail' not null
+    image_url           varchar(1000) not null,
+    image_path          varchar(500),
+    file_size           int unsigned,
+    width               smallint unsigned,
+    height              smallint unsigned,
+    mime_type           varchar(50),
+    cdn_url             varchar(1000),
+    is_primary          boolean default false,
+    upload_source       varchar(50),
+    created_at          timestamp default current_timestamp,
+    updated_at          timestamp default current_timestamp on update current_timestamp,
+
+    index idx_profile_id (profile_id),
+    index idx_profile_type_category (profile_id, image_type, image_category),
+    index idx_primary (profile_id, is_primary),
+
+    -- foreign key (profile_id) references member_profiles(profile_id) on delete cascade,
+    unique key unique_primary_avatar (profile_id, image_type, is_primary)
+);
+
 
 -- comments
 create table if not exists dailyfeed.comments
@@ -57,28 +119,6 @@ create table if not exists dailyfeed.posts
     updated_at         datetime     null
 );
 
-create table if not exists post_latest_activity (
-    id                 bigint auto_increment PRIMARY KEY,
-    member_id          bigint      NOT NULL,
-    post_id            bigint      NOT NULL,
-    activity_type      enum('CREATE', 'UPDATE', 'DELETE') NOT NULL,
-    created_at         datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    UNIQUE KEY uk_post_member (post_id, member_id),
-    KEY idx_member_activity_updated (member_id, activity_type, updated_at DESC),
-    KEY idx_updated (updated_at DESC)  -- 전체 최신 순서 조회용
-);
-
-create table if not exists post_activity_history
-(
-    id            bigint auto_increment PRIMARY KEY,
-    member_id     bigint      not null,
-    post_id       bigint      not null,
-    activity_type varchar(40) not null,
-    created_at  datetime    not null
-);
-
 -- jwt_keys
 create table if not exists dailyfeed.jwt_keys
 (
@@ -91,3 +131,54 @@ create table if not exists dailyfeed.jwt_keys
     created_at       datetime     null,
     updated_at datetime     null
 );
+
+
+
+-- SEASON 2
+-- handle (닉네임(사용자명)) 변경 이력 추적 테이블
+-- create table dailyfeed.member_handle_history (
+--     history_id bigint primary key auto_increment,
+--     profile_id bigint not null,
+--     old_handle varchar(50),
+--     new_handle varchar(50),
+--     changed_at timestamp default current_timestamp,
+--     reason varchar(100),
+--
+--     index idx_profile_id (profile_id),
+--     index idx_handles (old_handle, new_handle),
+--
+--     foreign key (profile_id) references member_profiles(profile_id)
+-- );
+--
+-- -- handle(닉네임(사용자명)) 예약어/금지어 단어 테이블
+-- create table dailyfeed.reserved_handles (
+--     handle varchar(50) primary key,
+--     reason enum('system', 'brand', 'inappropriate', 'reserved') not null,
+--     created_at timestamp default current_timestamp
+-- );
+--
+-- -- 프로필 다국어 정보 테이블
+-- create table dailyfeed.member_profile_i18n (
+--     i18n_id bigint primary key auto_increment,
+--     profile_id bigint not null,
+--     language_code varchar(10) not null,
+--     localized_name varchar(100),
+--     localized_bio text,
+--
+--     unique key unique_profile_lang (profile_id, language_code),
+--     foreign key (profile_id) references member_profiles(profile_id) on delete cascade
+-- );
+--
+-- -- 프로필 캐시 메타데이터
+-- create table dailyfeed.member_profile_cache (
+--     profile_id bigint primary key,
+--     cache_key varchar(100) unique,
+--     cached_data json,
+--     cache_expires_at timestamp,
+--     cache_version smallint default 1,
+--
+--     index idx_cache_key (cache_key),
+--     index idx_expires (cache_expires_at),
+--
+--     foreign key (profile_id) references member_profiles(profile_id) on delete cascade
+-- );
