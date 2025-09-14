@@ -1,11 +1,3 @@
-drop table dailyfeed.members;
-drop table dailyfeed.member_follows;
-drop table dailyfeed.member_profiles;
-drop table dailyfeed.member_profile_images;
-drop table dailyfeed.comments;
-drop table dailyfeed.posts;
-drop table dailyfeed.jwt_keys;
-
 -- members
 create table if not exists dailyfeed.members
 (
@@ -55,7 +47,7 @@ create table if not exists dailyfeed.member_profiles
     index idx_handle (handle),
     index idx_country_lang (country_code, language_code),
     index idx_verification (verification_status),
-    index idx_updated_at (updated_at),
+    index idx_updated_at (updated_at)
 
     -- FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE
 );
@@ -69,7 +61,7 @@ create table if not exists dailyfeed.member_profile_images
     image_category      varchar(20) not null, -- 'original', 'small', 'medium', 'large', 'thumbnail' not null
     image_url           varchar(1000) not null,
     image_path          varchar(500),
-    file_size           int unsigned,
+    file_size           bigint unsigned,
     width               smallint unsigned,
     height              smallint unsigned,
     mime_type           varchar(50),
