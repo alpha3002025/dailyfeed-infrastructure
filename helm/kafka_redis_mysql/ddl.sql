@@ -32,10 +32,8 @@ create table if not exists dailyfeed.member_follows
 create table if not exists dailyfeed.member_profiles
 (
     id                  bigint auto_increment primary key,
-    member_id           bigint null,
-    profile_id          bigint primary key auto_increment,
     member_id           bigint not null,
-    name                varchar(100) not null,
+    member_name         varchar(100) not null,
     handle              varchar(50) not null unique,
     display_name        varchar(100), -- 표시용 이름 (이모지, 특수문자 포함 가능)
     bio text,
