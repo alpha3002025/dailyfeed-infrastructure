@@ -23,7 +23,7 @@ create table if not exists dailyfeed.member_follows
 -- member_profiles
 create table if not exists dailyfeed.member_profiles
 (
-    id                  bigint auto_increment primary key,
+    id                  bigint auto_increment PRIMARY KEY,
     member_id           bigint not null,
     member_name         varchar(100) not null,
     handle              varchar(50) not null unique,
@@ -55,7 +55,7 @@ create table if not exists dailyfeed.member_profiles
 -- member_profile_images
 create table if not exists dailyfeed.member_profile_images
 (
-    image_id            bigint primary key auto_increment,
+    image_id            bigint auto_increment PRIMARY KEY,
     profile_id          bigint not null,
     image_type          varchar(20), -- 'avatar', 'cover', 'gallery' default 'avatar'
     image_category      varchar(20) not null, -- 'original', 'small', 'medium', 'large', 'thumbnail' not null
@@ -118,8 +118,40 @@ create table if not exists dailyfeed.jwt_keys
     is_active          tinyint(1)   not null,
     expires_at         datetime     null,
     is_primary         tinyint(1)   not null,
-    created_at       datetime     null,
-    updated_at datetime     null
+    created_at         datetime     null,
+    updated_at         datetime     null
+);
+
+-- Refresh Token 테이블
+create table if not exists dailyfeed.jwt_refresh_tokens (
+    id                 bigint auto_increment PRIMARY KEY,
+    token_id           varchar(255) unique not null,
+    member_id          bigint not null,
+    token_value        varchar(512) unique not null,
+    access_token_id    varchar(255) not null, -- == jti
+    expires_at         timestamp not null,
+    is_revoked         boolean default false,
+    device_info        varchar(500),
+    ip_address         varchar(50),
+    created_at         timestamp default current_timestamp,
+    updated_at         timestamp default current_timestamp on update current_timestamp,
+    index idx_token_value (token_value),
+    index idx_member_id (member_id),
+    index idx_access_token_id (access_token_id),
+    index idx_expires_at (expires_at)
+);
+
+-- Token Blacklist 테이블
+create table if not exists dailyfeed.jwt_blacklist (
+    id              bigint auto_increment PRIMARY KEY,
+    jti             varchar(255) unique not null,
+    member_id       bigint not null,
+    expires_at      timestamp not null,
+    reason          varchar(100),
+    created_at      timestamp default current_timestamp,
+    updated_at      timestamp default current_timestamp on update current_timestamp,
+    index idx_token_jti (jti),
+    index idx_expires_at (expires_at)
 );
 
 
