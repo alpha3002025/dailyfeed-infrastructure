@@ -24,23 +24,21 @@ services:
     networks:
       - dailyfeed-network
 
-  #  mongo-dailyfeed-1:
-  #    image: percona/percona-server-mongodb:7.0
-  #    container_name: mongo_dailyfeed_1
-  #    hostname: mongo_dailyfeed_1
-  #    command: mongod --replSet rs0 --bind_ip_all
-  #    ports:
-  #      - "27017:27017"
-  #    volumes:
-  #      - ./mongo-dailyfeed-1-data:/data/db
-  #    environment:
-  #      MONGO_INITDB_DATABASE: dailyfeed
-  #      MONGO_INITDB_ROOT_USERNAME: root
-  #      MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
-  #    networks:
-  #      mongo-cluster:
-  #        aliases:
-  #          - mongo_dailyfeed_1
+  mongodb-dailyfeed:
+    image: mongo:7.0
+    container_name: mongodb-dailyfeed
+    hostname: mongodb-dailyfeed
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: dailyfeed
+      MONGO_INITDB_ROOT_USERNAME: dailyfeed
+      MONGO_INITDB_ROOT_PASSWORD: hitEnter###
+    networks:
+      - dailyfeed-network
   #  mongo-dailyfeed-2:
   #    image: percona/percona-server-mongodb:7.0
   #    container_name: mongo_dailyfeed_2
@@ -203,6 +201,7 @@ services:
       - dailyfeed-network
 
 volumes:
+  mongodb-data:
   mongo-dailyfeed-1-data:
   mongo-dailyfeed-2-data:
   mongo-dailyfeed-3-data:
