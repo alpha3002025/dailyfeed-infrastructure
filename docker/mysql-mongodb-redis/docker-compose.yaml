@@ -24,22 +24,113 @@ services:
     networks:
       - dailyfeed-network
 
-  # MongoDB Single Instance
-  mongodb-dailyfeed:
+  # MongoDB Replica Set Primary
+  mongo-dailyfeed-1:
     image: mongo:7.0
-    container_name: mongodb-dailyfeed
-    hostname: mongodb-dailyfeed
+    container_name: mongo-dailyfeed-1
+    hostname: mongo-dailyfeed-1
     restart: always
+    command: mongod --replSet rs0 --bind_ip_all
     ports:
       - "27017:27017"
     volumes:
-      - mongodb-data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: dailyfeed
-      MONGO_INITDB_ROOT_USERNAME: dailyfeed
-      MONGO_INITDB_ROOT_PASSWORD: hitEnter###
+      - mongo-dailyfeed-1-data:/data/db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - dailyfeed-network
+
+  # MongoDB Replica Set Secondary 1
+  mongo-dailyfeed-2:
+    image: mongo:7.0
+    container_name: mongo-dailyfeed-2
+    hostname: mongo-dailyfeed-2
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-dailyfeed-2-data:/data/db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - dailyfeed-network
+
+  # MongoDB Replica Set Secondary 2
+  mongo-dailyfeed-3:
+    image: mongo:7.0
+    container_name: mongo-dailyfeed-3
+    hostname: mongo-dailyfeed-3
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo-dailyfeed-3-data:/data/db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - dailyfeed-network
+
+  # MongoDB Replica Set Initializer
+  mongo-init:
+    image: mongo:7.0
+    container_name: mongo-init
+    depends_on:
+      - mongo-dailyfeed-1
+      - mongo-dailyfeed-2
+      - mongo-dailyfeed-3
+    networks:
+      - dailyfeed-network
+    entrypoint: ["/bin/bash", "-c"]
+    command: |
+      "
+      echo 'Waiting for MongoDB instances to be ready...'
+      sleep 15
+
+      echo 'Initializing replica set...'
+      mongosh --host mongo-dailyfeed-1:27017 --eval '
+        try {
+          rs.status();
+          print(\"Replica set already initialized\");
+        } catch (e) {
+          print(\"Initializing new replica set...\");
+          rs.initiate({
+            _id: \"rs0\",
+            members: [
+              { _id: 0, host: \"mongo-dailyfeed-1:27017\", priority: 2 },
+              { _id: 1, host: \"mongo-dailyfeed-2:27017\", priority: 1 },
+              { _id: 2, host: \"mongo-dailyfeed-3:27017\", priority: 1 }
+            ]
+          });
+        }
+      '
+
+      echo 'Waiting for replica set to become ready...'
+      sleep 10
+
+      echo 'Creating users...'
+      mongosh --host mongo-dailyfeed-1:27017/admin --eval '
+        db.createUser({
+          user: \"dailyfeed\",
+          pwd: \"hitEnter###\",
+          roles: [\"root\"]
+        });
+      '
+
+      mongosh --host mongo-dailyfeed-1:27017/dailyfeed -u dailyfeed -p hitEnter### --authenticationDatabase admin --eval '
+        db.createUser({
+          user: \"dailyfeed\",
+          pwd: \"hitEnter###\",
+          roles: [{role: \"readWrite\", db: \"dailyfeed\"}]
+        });
+      '
+
+      echo 'Verifying replica set status...'
+      mongosh --host mongo-dailyfeed-1:27017 -u dailyfeed -p hitEnter### --authenticationDatabase admin --eval 'rs.status()'
+
+      echo 'MongoDB Replica Set initialization completed!'
+      "
 
   # Zookeeper for Kafka Cluster
   zookeeper-dailyfeed:
@@ -334,78 +425,9 @@ services:
     networks:
       - dailyfeed-network
 
-  # MongoDB Replica Set 구성 (필요시 주석 해제)
-  # mongo-dailyfeed-1:
-  #   image: percona/percona-server-mongodb:7.0
-  #   container_name: mongo_dailyfeed_1
-  #   hostname: mongo_dailyfeed_1
-  #   command: mongod --replSet rs0 --bind_ip_all
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - mongo-dailyfeed-1-data:/data/db
-  #   environment:
-  #     MONGO_INITDB_DATABASE: dailyfeed
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
-  #   networks:
-  #     mongo-cluster:
-  #       aliases:
-  #         - mongo_dailyfeed_1
-  #
-  # mongo-dailyfeed-2:
-  #   image: percona/percona-server-mongodb:7.0
-  #   container_name: mongo_dailyfeed_2
-  #   hostname: mongo_dailyfeed_2
-  #   command: mongod --replSet rs0 --bind_ip_all
-  #   ports:
-  #     - "27018:27017"
-  #   volumes:
-  #     - mongo-dailyfeed-2-data:/data/db
-  #   environment:
-  #     MONGO_INITDB_DATABASE: dailyfeed
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
-  #   networks:
-  #     mongo-cluster:
-  #       aliases:
-  #         - mongo_dailyfeed_2
-  #
-  # mongo-dailyfeed-3:
-  #   image: percona/percona-server-mongodb:7.0
-  #   container_name: mongo_dailyfeed_3
-  #   hostname: mongo_dailyfeed_3
-  #   command: mongod --replSet rs0 --bind_ip_all
-  #   ports:
-  #     - "27019:27017"
-  #   volumes:
-  #     - mongo-dailyfeed-3-data:/data/db
-  #   environment:
-  #     MONGO_INITDB_DATABASE: dailyfeed
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: hitEnter!!!
-  #   networks:
-  #     mongo-cluster:
-  #       aliases:
-  #         - mongo_dailyfeed_3
-  #
-  # # Replica Set 초기화를 위한 임시 컨테이너
-  # mongo-setup:
-  #   image: percona/percona-server-mongodb:7.0
-  #   container_name: mongo_setup
-  #   depends_on:
-  #     - mongo-dailyfeed-1
-  #     - mongo-dailyfeed-2
-  #     - mongo-dailyfeed-3
-  #   volumes:
-  #     - ./scripts:/scripts
-  #   entrypoint: [ "bash", "/scripts/init-replica.sh" ]
-  #   networks:
-  #     - mongo-cluster
 
 volumes:
   # MongoDB 볼륨
-  mongodb-data:
   mongo-dailyfeed-1-data:
   mongo-dailyfeed-2-data:
   mongo-dailyfeed-3-data:
