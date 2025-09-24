@@ -109,25 +109,10 @@ services:
       echo 'Waiting for replica set to become ready...'
       sleep 10
 
-      echo 'Creating users...'
-      mongosh --host mongo-dailyfeed-1:27017/admin --eval '
-        db.createUser({
-          user: \"dailyfeed\",
-          pwd: \"hitEnter###\",
-          roles: [\"root\"]
-        });
-      '
-
-      mongosh --host mongo-dailyfeed-1:27017/dailyfeed -u dailyfeed -p hitEnter### --authenticationDatabase admin --eval '
-        db.createUser({
-          user: \"dailyfeed\",
-          pwd: \"hitEnter###\",
-          roles: [{role: \"readWrite\", db: \"dailyfeed\"}]
-        });
-      '
+      echo 'Skipping user creation for local development...'
 
       echo 'Verifying replica set status...'
-      mongosh --host mongo-dailyfeed-1:27017 -u dailyfeed -p hitEnter### --authenticationDatabase admin --eval 'rs.status()'
+      mongosh --host mongo-dailyfeed-1:27017 --eval 'rs.status()'
 
       echo 'MongoDB Replica Set initialization completed!'
       "
