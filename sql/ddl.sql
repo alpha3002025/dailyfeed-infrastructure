@@ -33,7 +33,6 @@ create table if not exists dailyfeed.member_profiles
     website_url         varchar(500),
     birth_date          date,
     gender              varchar(30),    -- 'male', 'female', 'other', 'prefer_not_to_say'
-    timezone            varchar(50) default 'utc',
     language_code       varchar(10) default 'en',
     country_code        char(2),
     verification_status varchar(20),    -- 'none', 'pending', 'verified' default 'none'
