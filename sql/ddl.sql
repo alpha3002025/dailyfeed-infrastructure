@@ -4,12 +4,29 @@ create table if not exists dailyfeed.members
     id                 bigint auto_increment PRIMARY KEY,
     email              varchar(100) null,
     password           varchar(100)  null,
-    name               varchar(100) null,
     roles              varchar(100) null,
     created_at         datetime     null,
     updated_at         datetime     null,
     constraint member_unique_email
     unique (email)
+);
+
+-- member_emails
+create table if not exists member_emails (
+    id                      bigint auto_increment primary key,
+    member_id               bigint not null,
+    email                   varchar(100) not null,
+    is_active               boolean default false,
+    verified                boolean default false,
+    created_at              datetime default current_timestamp,
+    activated_at            datetime null,
+    deactivated_at          datetime null,
+
+    -- 핵심 인덱스
+    unique key uk_email (email),
+    unique key uk_user_active (member_id, is_active),
+    index idx_active_verified (is_active, verified, email), -- 로그인 최적화
+    index idx_cleanup (is_active, created_at) -- 배치 정리용
 );
 
 -- member_follow
