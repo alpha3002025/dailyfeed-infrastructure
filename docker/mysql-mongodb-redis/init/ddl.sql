@@ -2,13 +2,10 @@
 create table if not exists dailyfeed.members
 (
     id                 bigint auto_increment PRIMARY KEY,
-    email              varchar(100) null,
     password           varchar(100)  null,
     roles              varchar(100) null,
     created_at         datetime     null,
-    updated_at         datetime     null,
-    constraint member_unique_email
-    unique (email)
+    updated_at         datetime     null
 );
 
 -- member_emails
