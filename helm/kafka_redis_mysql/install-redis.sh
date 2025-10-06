@@ -1,1 +1,1 @@
-helm -n infra install redis oci://registry-1.docker.io/bitnamicharts/redis --set architecture=standalone --set auth.enabled=false --set master.persistence.enabled=false
+helm install my-redis oci://registry-1.docker.io/cloudpirates/redis --namespace infra
