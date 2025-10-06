@@ -29,6 +29,7 @@ echo ""
 ## networking
 echo " 🛜🛜🛜 install services"
 kubectl apply -n infra -f kafka_redis_mysql/local-mysql-service.yaml
+kubectl apply -n infra -f kafka_redis_mysql/local-redis-service.yaml
 kubectl apply -n infra -f kafka_redis_mysql/local-mongodb-service.yaml
 
 #echo "wait 60s (mysql pending) "
