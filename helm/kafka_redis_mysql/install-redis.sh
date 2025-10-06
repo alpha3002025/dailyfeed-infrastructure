@@ -1,1 +1,1 @@
-helm install my-redis oci://registry-1.docker.io/cloudpirates/redis --namespace infra
+helm install redis oci://registry-1.docker.io/cloudpirates/redis --namespace infra
