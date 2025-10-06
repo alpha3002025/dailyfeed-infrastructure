@@ -87,7 +87,7 @@ spec:
         readinessProbe:
           httpGet:
             path: {{ .httpGetPath }}
-            port: {{ .Values.portNumber }}
+            port: {{ $.Values.portNumber }}
           initialDelaySeconds: {{ .initialDelaySeconds }}
           periodSeconds: {{ .periodSeconds }}
           successThreshold: {{ .successThreshold }}
@@ -97,7 +97,7 @@ spec:
         livenessProbe:
           httpGet:
             path: {{ .httpGetPath }}
-            port: {{ .Values.portNumber }}
+            port: {{ $.Values.portNumber }}
           initialDelaySeconds: {{ .initialDelaySeconds }}
           periodSeconds: {{ .periodSeconds }}
           failureThreshold: {{ .failureThreshold }}
@@ -106,7 +106,7 @@ spec:
         startupProbe:
           httpGet:
             path: {{ .httpGetPath }}
-            port: {{ .Values.portNumber }}
+            port: {{ $.Values.portNumber }}
           initialDelaySeconds: {{ .initialDelaySeconds }}
           periodSeconds: {{ .periodSeconds }}
           failureThreshold: {{ .failureThreshold }}

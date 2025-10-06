@@ -2,6 +2,8 @@ namespace: dailyfeed
 imageTag: 0.0.1
 appName: dailyfeed-backend
 replicas: 1
+profile: local
+portNumber: 8080
 envValues: []
 configSecretItems: []
 resources:
