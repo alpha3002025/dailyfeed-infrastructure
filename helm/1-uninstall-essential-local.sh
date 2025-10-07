@@ -1,7 +1,7 @@
 ## remove configmap, secret
 #kubectl delete -f manifests/local/local-config-secret.yaml
 cd manifests/local
-kubectl apply -f .
+kubectl delete -f .
 cd ../..
 
 ## uninstall kafka, redis

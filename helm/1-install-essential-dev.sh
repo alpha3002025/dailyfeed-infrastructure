@@ -8,7 +8,7 @@ cd manifests/dev
 kubectl apply -f .
 cd ../..
 ## install kafka, redis
-cd kafka_redis
+cd kafka_redis_mysql
 source dev-setup.sh
 cd ..
 ## install mysql

@@ -1,26 +1,35 @@
-# Bitnami 저장소 추가
-helm repo add bitnami https://charts.bitnami.com/bitnami
+# WSO2 저장소 추가
+helm repo add wso2 https://helm.wso2.com
 helm repo update
 
-# MySQL 설치 (initdbScriptsConfigMap 없이)
-helm install mysql bitnami/mysql \
+# MySQL 설치
+helm install mysql wso2/mysql \
   --namespace infra \
-  --set auth.rootPassword="hitEnter###" \
-  --set auth.username="dailyfeed" \
-  --set auth.password="hitEnter###" \
-  --set auth.database="dailyfeed" \
-  --set primary.service.ports.mysql=3306
+  --set mysqlRootPassword="hitEnter###" \
+  --set mysqlUser="dailyfeed" \
+  --set mysqlPassword="hitEnter###" \
+  --set mysqlDatabase="dailyfeed" \
+  --set image="mysql" \
+  --set imageTag="8.0" \
+  --set persistence.enabled=false \
+  --set resources.requests.memory="256Mi" \
+  --set resources.requests.cpu="250m" \
+  --set resources.limits.memory="512Mi" \
+  --set resources.limits.cpu="500m"
 
-# MySQL Pod가 Ready 상태가 될 때까지 대기
+# MySQL Pod 상태 확인
 echo "Waiting for MySQL pod to be ready..."
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=mysql -n infra --timeout=120s
+kubectl wait --for=condition=ready pod -l app=mysql -n infra --timeout=300s
 
-# DDL 파일을 MySQL Pod로 복사
-echo "Copying DDL file to MySQL pod..."
-kubectl cp ddl.sql infra/mysql-0:/tmp/ddl.sql
-
-# DDL 실행
-echo "Executing DDL scripts..."
-kubectl exec mysql-0 -n infra -- bash -c "mysql -uroot -p'hitEnter###' dailyfeed < /tmp/ddl.sql"
-
-echo "MySQL installation and DDL execution completed!"
+# DDL 적용
+if [ $? -eq 0 ]; then
+  echo "✓ MySQL is ready. Applying DDL..."
+  MYSQL_POD=$(kubectl get pod -n infra -l app=mysql -o jsonpath='{.items[0].metadata.name}')
+  kubectl cp ./ddl.sql infra/$MYSQL_POD:/tmp/ddl.sql
+  kubectl exec -n infra $MYSQL_POD -- mysql -udailyfeed -phitEnter### dailyfeed -e "source /tmp/ddl.sql"
+  echo "✓ DDL execution completed successfully!"
+else
+  echo "✗ MySQL pod failed to start. Checking logs..."
+  kubectl logs -l app=mysql -n infra --tail=50
+  exit 1
+fi
