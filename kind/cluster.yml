@@ -36,6 +36,9 @@ nodes:
       - containerPort: 80 # nginx-ingress 가 인식하는 포트
         hostPort: 80 # API 접속시 호스트 PC 의 80 포트로 접속
         protocol: TCP
+      - containerPort: 30888 # member-svc NodePort
+        hostPort: 8888 # API 접속시 호스트 PC 의 8888 포트로 접속 (only 개발/debug 용도)
+        protocol: TCP
   - role: worker
 # - role: worker ## 필요하다면 추가
 # - role: worker ## 필요하다면 추가
