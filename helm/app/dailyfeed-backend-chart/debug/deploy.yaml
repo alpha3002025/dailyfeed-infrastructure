@@ -18,6 +18,25 @@ spec:
         app: {{ .Values.appName }}
     spec:
       containers:
+      - image: nginx
+        name: nginx
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: {{ .Values.profile }}
+        {{- with .Values.envValues }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.configSecretItems}}
+        envFrom:
+          {{- range .Values.configSecretItems }}
+          - configMapRef:
+              name: {{ . | trimSuffix "-nosecret" }}-config
+          {{- if not (hasSuffix "-nosecret" .)}}
+          - secretRef:
+              name: {{ . }}-secret
+          {{- end}}
+          {{- end}}
+        {{- end}}
       - image: alpha300uk/{{ .Values.appName }}-svc:{{ .Values.imageTag }}
         name: {{ .Values.appName }}
         ports:
