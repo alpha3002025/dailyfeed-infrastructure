@@ -19,7 +19,7 @@ cd ../..
 echo ""
 
 
-## install kafka, redis
+## install kafka, redis, mongodb
 echo " 📦📦📦 install kafka, redis, mysql, mongodb"
 cd kafka_redis_mysql
 source local-setup.sh
@@ -38,3 +38,7 @@ kubectl apply -n infra -f kafka_redis_mysql/local-mongodb-service.yaml
 ### fort-forwarding
 #echo "port-forward -n infra svc/mysql 3306:3306 &"
 #kubectl port-forward -n infra svc/mysql 3306:3306 &
+
+echo "⛴️ create namespace 'dailyfeed' & istio-injection=enabled"
+kubectl create namespace dailyfeed
+kubectl label namespace istio-injection=enabled
