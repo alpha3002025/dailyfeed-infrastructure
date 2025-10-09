@@ -19,6 +19,7 @@ spec:
     spec:
       containers:
       - image: alpha300uk/{{ .Values.appName }}-svc:{{ .Values.imageTag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         name: {{ .Values.appName }}
         ports:
         - containerPort: {{ .Values.portNumber }}

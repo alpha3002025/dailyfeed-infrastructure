@@ -6,6 +6,7 @@ profile: local
 portNumber: 8080
 envValues: []
 configSecretItems: []
+imagePullPolicy: Always
 resources:
   memory:
     requests: "500Mi"
