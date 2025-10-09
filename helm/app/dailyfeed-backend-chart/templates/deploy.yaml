@@ -42,6 +42,11 @@ spec:
         {{- with .Values.envValues }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if .Values.debugValues}}
+        {{- with .Values.debugValues}}
+        {{- toYaml . | nindent 8 }}
+        {{- end}}
+        {{- end}}
         {{- if .Values.configSecretItems}}
         envFrom:
           {{- range .Values.configSecretItems }}
