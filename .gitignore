@@ -1,3 +1,7 @@
 # MongoDB data directories
 **/mysql-mongodb-redis/mongo-dailyfeed-*-data/
 **/mysql-mongodb-redis/keyfile.txt
+
+# macOS system files
+.DS_Store
+**/.DS_Store
