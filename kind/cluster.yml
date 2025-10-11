@@ -27,11 +27,14 @@ nodes:
       - containerPort: 32001 ## Test mTLS
         hostPort: 32001
         protocol: TCP
-      - containerPort: 3306 ## MySQL
+      - containerPort: 30306 ## MySQL NodePort
         hostPort: 3306
         protocol: TCP
-      - containerPort: 6379 ## redis
+      - containerPort: 30379 ## Redis NodePort
         hostPort: 6379
+        protocol: TCP
+      - containerPort: 30017 ## MongoDB NodePort
+        hostPort: 27017
         protocol: TCP
       - containerPort: 9092 ## kafka
         hostPort: 9092

@@ -20,9 +20,3 @@ echo ""
 echo "=== 📇 create namespace 'dailyfeed'"
 kubectl create namespace dailyfeed
 echo ""
-
-
-echo "=== 🛜 create Nodeport 'dailyfeed-member-debug-svc'"
-kubectl apply -f dailyfeed-member-debug-svc.yaml
-echo ""
-
