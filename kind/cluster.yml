@@ -18,6 +18,9 @@ nodes:
       - containerPort: 31001 ## Jaeger UI
         hostPort: 31001
         protocol: TCP
+      - containerPort: 31002 ## Prometheus
+        hostPort: 31002
+        protocol: TCP
       - containerPort: 31380 ## Istio Ingress Gateway
         hostPort: 31380
         protocol: TCP
