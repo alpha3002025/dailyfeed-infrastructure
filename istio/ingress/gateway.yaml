@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: dailyfeed-gateway
+  namespace: dailyfeed
+spec:
+  selector:
+    istio: ingressgateway  # Use Istio's default ingress gateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "dailyfeed.local"
+    - "*"  # Allow access from any host (useful for development)
+  # Optional: Add HTTPS configuration when you have certificates
+  # - port:
+  #     number: 443
+  #     name: https
+  #     protocol: HTTPS
+  #   tls:
+  #     mode: SIMPLE
+  #     credentialName: dailyfeed-frontend-tls  # Certificate secret name
+  #   hosts:
+  #   - "dailyfeed.local"

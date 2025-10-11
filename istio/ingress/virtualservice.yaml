@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: dailyfeed-frontend
+  namespace: dailyfeed
+spec:
+  hosts:
+  - "dailyfeed.local"
+  - "*"  # Allow access from any host (useful for development)
+  gateways:
+  - dailyfeed-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: dailyfeed-frontend  # Service name
+        port:
+          number: 3000
+    # Optional: Configure timeout and retry policies
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: gateway-error,connect-failure,refused-stream
+    # Optional: CORS configuration (if needed)
+    # corsPolicy:
+    #   allowOrigins:
+    #   - exact: "*"
+    #   allowMethods:
+    #   - GET
+    #   - POST
+    #   - PUT
+    #   - DELETE
+    #   - OPTIONS
+    #   allowHeaders:
+    #   - "*"
+    #   maxAge: "24h"
