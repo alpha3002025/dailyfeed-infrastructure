@@ -11,7 +11,7 @@ spec:
     protocol: TCP
     targetPort: {{ .Values.portNumber }}
   selector:
-    app: {{ .Values.appName }}-svc
+    app: {{ .Values.appName }}
   type: ClusterIP
 status:
   loadBalancer: {}

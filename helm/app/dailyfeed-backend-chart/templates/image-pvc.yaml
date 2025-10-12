@@ -1,0 +1,21 @@
+{{- if .Values.persistence }}
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.appName }}-claim
+spec:
+  accessModes:
+    {{- if .Values.persistence.accessModes }}
+    {{- range .Values.persistence.accessModes }}
+    - {{ . }}
+    {{- end }}
+    {{- else }} ## values.yaml 에 accessModes 가 없을 경우 기본값을 지정
+    - ReadWriteMany
+    {{- end -}}
+  storageClassName: {{ .Values.persistence.storageClass | default "efs-sc" }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.storageRequest | default "5Gi" }}
+{{- end }}
+{{- end }}

@@ -45,6 +45,21 @@ nodes:
       - containerPort: 30888 # member-svc NodePort
         hostPort: 8888 # API 접속시 호스트 PC 의 8888 포트로 접속 (only 개발/debug 용도)
         protocol: TCP
+      - containerPort: 30889 # image-svc NodePort
+        hostPort: 8889 # API 접속시 호스트 PC 의 8889 포트로 접속 (only 개발/debug 용도)
+        protocol: TCP
+      - containerPort: 30890 # timeline-svc NodePort
+        hostPort: 8890 # API 접속시 호스트 PC 의 8890 포트로 접속 (only 개발/debug 용도)
+        protocol: TCP
+      - containerPort: 30891 # content-svc NodePort
+        hostPort: 8891 # API 접속시 호스트 PC 의 8891 포트로 접속 (only 개발/debug 용도)
+        protocol: TCP
+      - containerPort: 30892 # activity-svc NodePort
+        hostPort: 8892 # API 접속시 호스트 PC 의 8892 포트로 접속 (only 개발/debug 용도)
+        protocol: TCP
+      - containerPort: 30893 # search-svc NodePort
+        hostPort: 8893 # API 접속시 호스트 PC 의 8893 포트로 접속 (only 개발/debug 용도)
+        protocol: TCP
   - role: worker
 # - role: worker ## 필요하다면 추가
 # - role: worker ## 필요하다면 추가

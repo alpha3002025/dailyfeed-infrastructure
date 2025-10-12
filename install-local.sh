@@ -15,6 +15,26 @@ echo "=== 🛜 create Nodeport 'dailyfeed-member-debug-svc'"
 kubectl apply -f kind/nodeport/dailyfeed-member-debug-svc.yaml
 echo ""
 
+echo "=== 🛜 create Nodeport 'dailyfeed-content-debug-svc'"
+kubectl apply -f kind/nodeport/dailyfeed-content-debug-svc.yaml
+echo ""
+
+echo "=== 🛜 create Nodeport 'dailyfeed-timeline-debug-svc'"
+kubectl apply -f kind/nodeport/dailyfeed-timeline-debug-svc.yaml
+echo ""
+
+echo "=== 🛜 create Nodeport 'dailyfeed-activity-debug-svc'"
+kubectl apply -f kind/nodeport/dailyfeed-activity-debug-svc.yaml
+echo ""
+
+echo "=== 🛜 create Nodeport 'dailyfeed-image-debug-svc'"
+kubectl apply -f kind/nodeport/dailyfeed-image-debug-svc.yaml
+echo ""
+
+echo "=== 🛜 create Nodeport 'dailyfeed-search-debug-svc'"
+kubectl apply -f kind/nodeport/dailyfeed-search-debug-svc.yaml
+echo ""
+
 
 echo "=== 🛜 create Nodeport 'mysql-nodeport'"
 kubectl apply -f kind/nodeport/mysql-nodeport.yaml
@@ -28,6 +48,11 @@ echo ""
 
 echo "=== 🛜 create Nodeport 'mongodb-nodeport'"
 kubectl apply -f kind/nodeport/mongodb-nodeport.yaml
+echo ""
+
+
+echo "=== 🛜 create storageclass 'local-path'"
+kubectl apply -f kind/sc/storageclass.yaml
 echo ""
 
 

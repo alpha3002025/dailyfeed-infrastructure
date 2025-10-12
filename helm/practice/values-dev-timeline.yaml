@@ -36,7 +36,7 @@ porbeValues:
     failureThreshold: 3
 persistence:
   enabled: false ## (3) 기본값은 false 로 지정, 필요한 서비스에서만 helm cli 로 persistence.enabled=true 로 지정해서 배포
-  storageClass: test-sc
+  storageClass: local-path
   storageRequest: "1Gi"
   accessModes:
     - ReadWriteOnce

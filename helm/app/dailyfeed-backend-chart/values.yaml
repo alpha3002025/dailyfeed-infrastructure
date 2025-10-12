@@ -38,7 +38,7 @@ porbeValues:
     failureThreshold: 3
 persistence:
   enabled: false
-  storageClass: test-sc
+  storageClass: local-path
   storageRequest: "1Gi"
   accessModes:
   - ReadWriteOnce
