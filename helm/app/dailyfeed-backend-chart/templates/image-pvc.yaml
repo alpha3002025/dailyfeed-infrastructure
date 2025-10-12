@@ -12,7 +12,7 @@ spec:
     {{- end }}
     {{- else }} ## values.yaml 에 accessModes 가 없을 경우 기본값을 지정
     - ReadWriteMany
-    {{- end -}}
+    {{- end }}
   storageClassName: {{ .Values.persistence.storageClass | default "efs-sc" }}
   resources:
     requests:

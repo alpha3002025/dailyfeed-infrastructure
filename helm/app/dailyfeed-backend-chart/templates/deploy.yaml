@@ -100,4 +100,19 @@ spec:
           periodSeconds: {{ .periodSeconds }}
           failureThreshold: {{ .failureThreshold }}
         {{- end}}
+        {{- if .Values.persistence }}
+        {{- if .Values.persistence.enabled }}
+        volumeMounts:
+        - name: image-storage
+          mountPath: {{ .Values.persistence.mountPath }}
+        {{- end }}
+        {{- end }}
+      {{- if .Values.persistence }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+      - name: image-storage
+        persistentVolumeClaim:
+          claimName: {{ .Values.appName }}-claim
+      {{- end }}
+      {{- end }}
 status: {}
