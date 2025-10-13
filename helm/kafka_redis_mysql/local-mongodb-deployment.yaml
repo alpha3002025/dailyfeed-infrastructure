@@ -18,26 +18,6 @@ spec:
         app.kubernetes.io/name: mongodb
         app.kubernetes.io/instance: mongodb
     spec:
-      initContainers:
-      - name: init-replica-set
-        image: mongo:7.0
-        command:
-        - /bin/sh
-        - -c
-        - |
-          cat > /docker-entrypoint-initdb.d/00-init-replica.js <<'EOF'
-          try {
-            rs.initiate({
-              _id: 'rs0',
-              members: [{ _id: 0, host: 'mongodb.infra.svc.cluster.local:27017' }]
-            });
-          } catch(e) {
-            print('Replica set already initialized or error: ' + e);
-          }
-          EOF
-        volumeMounts:
-        - name: mongodb-init-rs
-          mountPath: /docker-entrypoint-initdb.d
       containers:
       - name: mongodb
         image: mongo:7.0
@@ -46,6 +26,39 @@ spec:
         - "--replSet"
         - "rs0"
         - "--bind_ip_all"
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                (
+                  for i in $(seq 1 30); do
+                    if mongosh --quiet --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q 1; then
+                      echo "MongoDB is ready"
+                      mongosh --quiet --eval "
+                        try {
+                          rs.status();
+                          print('Replica set already initialized');
+                        } catch(e) {
+                          if (e.codeName === 'NoReplicationEnabled') {
+                            print('Initializing replica set...');
+                            rs.initiate({
+                              _id: 'rs0',
+                              members: [{ _id: 0, host: 'mongodb.infra.svc.cluster.local:27017' }]
+                            });
+                            print('Replica set initialized successfully');
+                          }
+                        }
+                      "
+                      exit 0
+                    fi
+                    echo "Waiting for MongoDB... attempt $i/30"
+                    sleep 2
+                  done
+                  echo "MongoDB did not become ready in time"
+                ) &
         ports:
         - containerPort: 27017
           name: mongodb
@@ -60,9 +73,6 @@ spec:
         - name: mongodb-data
           mountPath: /data/db
         - name: mongodb-init
-          mountPath: /docker-entrypoint-initdb.d/01-users.js
-          subPath: init.js
-        - name: mongodb-init-rs
           mountPath: /docker-entrypoint-initdb.d
         resources:
           requests:
@@ -77,8 +87,6 @@ spec:
       - name: mongodb-init
         configMap:
           name: mongodb-init-script
-      - name: mongodb-init-rs
-        emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -104,6 +112,145 @@ data:
         { role: 'dbAdmin', db: 'dailyfeed' }
       ]
     });
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-init-replicaset
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: mongodb-init
+    app.kubernetes.io/instance: mongodb
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mongodb-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mongodb-init
+        image: mongo:7.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for MongoDB to be ready..."
+          for i in $(seq 1 60); do
+            if mongosh --host mongodb.infra.svc.cluster.local:27017 --quiet --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q 1; then
+              echo "MongoDB is ready, checking replica set status..."
+
+              # Check if replica set is already initialized
+              if mongosh --host mongodb.infra.svc.cluster.local:27017 --quiet --eval "rs.status()" 2>&1 | grep -qE "(NoReplicationEnabled|no replset config)"; then
+                echo "Initializing replica set..."
+                mongosh --host mongodb.infra.svc.cluster.local:27017 --eval "
+                  rs.initiate({
+                    _id: 'rs0',
+                    members: [{ _id: 0, host: 'mongodb.infra.svc.cluster.local:27017' }]
+                  })
+                "
+                echo "Replica set initialized successfully"
+              else
+                echo "Replica set already initialized"
+              fi
+              exit 0
+            fi
+            echo "Waiting for MongoDB... attempt $i/60"
+            sleep 2
+          done
+          echo "MongoDB did not become ready in time"
+          exit 1
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-init-users
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: mongodb-init-users
+    app.kubernetes.io/instance: mongodb
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mongodb-init-users
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mongodb-init-users
+        image: mongo:7.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "=== MongoDB User Initialization ==="
+
+          # Wait for MongoDB to be ready and replica set initialized
+          echo "Waiting for MongoDB to be ready..."
+          for i in $(seq 1 60); do
+            if mongosh --host mongodb.infra.svc.cluster.local:27017 --quiet --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q 1; then
+              echo "MongoDB is ready"
+
+              # Wait a bit for replica set to be fully initialized
+              sleep 5
+
+              # Check if users already exist
+              echo "Checking if users already exist..."
+              USER_COUNT=$(mongosh --host mongodb.infra.svc.cluster.local:27017 dailyfeed --quiet --eval "db.getUsers().users.length" 2>/dev/null || echo "0")
+
+              if [ "$USER_COUNT" != "0" ]; then
+                echo "Users already exist (count: $USER_COUNT). Skipping initialization."
+                exit 0
+              fi
+
+              # Create MongoDB users
+              echo "Creating MongoDB users..."
+              mongosh --host mongodb.infra.svc.cluster.local:27017 dailyfeed --quiet --eval '
+                db.createUser({
+                  user: "dailyfeed",
+                  pwd: "hitEnter###",
+                  roles: [
+                    { role: "readWrite", db: "dailyfeed" },
+                    { role: "dbAdmin", db: "dailyfeed" }
+                  ]
+                });
+                db.createUser({
+                  user: "dailyfeed-search",
+                  pwd: "hitEnter###",
+                  roles: [
+                    { role: "readWrite", db: "dailyfeed" },
+                    { role: "dbAdmin", db: "dailyfeed" }
+                  ]
+                });
+                print("Users created successfully");
+              '
+
+              if [ $? -eq 0 ]; then
+                echo ""
+                echo "=== MongoDB Users Created Successfully ==="
+                echo "Database: dailyfeed"
+                echo "Users:"
+                echo "  - dailyfeed (readWrite, dbAdmin)"
+                echo "  - dailyfeed-search (readWrite, dbAdmin)"
+                echo ""
+
+                # Verify users
+                echo "Verifying users..."
+                mongosh --host mongodb.infra.svc.cluster.local:27017 dailyfeed --quiet --eval "db.getUsers()"
+                exit 0
+              else
+                echo "ERROR: Failed to create MongoDB users"
+                exit 1
+              fi
+            fi
+            echo "Waiting for MongoDB... attempt $i/60"
+            sleep 2
+          done
+
+          echo "ERROR: MongoDB did not become ready in time"
+          exit 1
 ---
 apiVersion: v1
 kind: Service
