@@ -18,9 +18,34 @@ spec:
         app.kubernetes.io/name: mongodb
         app.kubernetes.io/instance: mongodb
     spec:
+      initContainers:
+      - name: init-replica-set
+        image: mongo:7.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          cat > /docker-entrypoint-initdb.d/00-init-replica.js <<'EOF'
+          try {
+            rs.initiate({
+              _id: 'rs0',
+              members: [{ _id: 0, host: 'mongodb.infra.svc.cluster.local:27017' }]
+            });
+          } catch(e) {
+            print('Replica set already initialized or error: ' + e);
+          }
+          EOF
+        volumeMounts:
+        - name: mongodb-init-rs
+          mountPath: /docker-entrypoint-initdb.d
       containers:
       - name: mongodb
         image: mongo:7.0
+        command:
+        - mongod
+        - "--replSet"
+        - "rs0"
+        - "--bind_ip_all"
         ports:
         - containerPort: 27017
           name: mongodb
@@ -35,6 +60,9 @@ spec:
         - name: mongodb-data
           mountPath: /data/db
         - name: mongodb-init
+          mountPath: /docker-entrypoint-initdb.d/01-users.js
+          subPath: init.js
+        - name: mongodb-init-rs
           mountPath: /docker-entrypoint-initdb.d
         resources:
           requests:
@@ -49,6 +77,8 @@ spec:
       - name: mongodb-init
         configMap:
           name: mongodb-init-script
+      - name: mongodb-init-rs
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap
