@@ -103,16 +103,30 @@ spec:
         {{- if .Values.persistence }}
         {{- if .Values.persistence.enabled }}
         volumeMounts:
-        - name: image-storage
+        - name: {{ .Values.appName }}-storage
           mountPath: {{ .Values.persistence.mountPath }}
+        {{- if .Values.persistence.kafkaFailureStorage }}
+        {{- if .Values.persistence.kafkaFailureStorage.enabled }}
+        volumeMounts:
+        - name: kafka-failure-storage
+          mountPath: {{ .Values.persistence.kafkaFailureStorage.mountPath }}
+        {{- end }}
+        {{- end }}
         {{- end }}
         {{- end }}
       {{- if .Values.persistence }}
       {{- if .Values.persistence.enabled }}
       volumes:
-      - name: image-storage
+      - name: {{ .Values.appName }}-storage
         persistentVolumeClaim:
           claimName: {{ .Values.appName }}-claim
+      {{- if .Values.persistence.kafkaFailureStorage }}
+      {{- if .Values.persistence.kafkaFailureStorage.enabled }}
+      - name: kafka-failure-storage
+        persistentVolumeClaim:
+          claimName: kafka-failure-storage-claim
+      {{- end }}
+      {{- end }}
       {{- end }}
       {{- end }}
 status: {}

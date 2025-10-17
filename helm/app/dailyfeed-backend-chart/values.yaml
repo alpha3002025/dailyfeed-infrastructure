@@ -43,3 +43,10 @@ persistence:
   accessModes:
   - ReadWriteOnce
   mountPath: /image
+  kafkaFailureStorage:
+    enabled: false
+    storageClass: local-path
+    storageRequest: "1Gi"
+    accessModes:
+    - ReadWriteMany
+    mountPath: /kafka-failures
