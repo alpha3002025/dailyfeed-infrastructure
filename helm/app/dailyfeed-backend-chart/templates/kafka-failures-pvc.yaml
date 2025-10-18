@@ -1,0 +1,25 @@
+{{- if .Values.persistence }}
+{{- if .Values.persistence.enabled }}
+{{- if .Values.persistence.kafkaFailureStorage }}
+{{- if .Values.persistence.kafkaFailureStorage.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-failure-storage-claim
+spec:
+  accessModes:
+    {{- if .Values.persistence.kafkaFailureStorage.accessModes }}
+    {{- range .Values.persistence.kafkaFailureStorage.accessModes }}
+    - {{ . }}
+    {{- end }}
+    {{- else }} ## kafkaFailureStorage 에 accessModes 가 없을 경우 기본값을 지정
+    - ReadWriteMany
+    {{- end }}
+  storageClassName: {{ .Values.persistence.kafkaFailureStorage.storageClass | default "efs-sc" }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.kafkaFailureStorage.storageRequest | default "5Gi" }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
