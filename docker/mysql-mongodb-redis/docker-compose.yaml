@@ -21,6 +21,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
     volumes:
       - ./init/ddl.sql:/docker-entrypoint-initdb.d/01-ddl.sql
+      - ./init/02-batch-schema.sql:/docker-entrypoint-initdb.d/02-batch-schema.sql
     networks:
       - dailyfeed-network
 

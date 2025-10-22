@@ -19,7 +19,7 @@ cd ../..
 echo ""
 
 
-## install kafka, redis, mongodb
+## install kafka, redis, mysql, mongodb
 echo " 📦📦📦 install kafka, redis, mysql, mongodb"
 cd kafka_redis_mysql
 source local-setup.sh
