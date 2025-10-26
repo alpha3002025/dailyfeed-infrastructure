@@ -61,6 +61,12 @@ echo ""
 
 
 echo ""
+echo "📊 install metrics-server for HPA === "
+source install-metrics-server.sh
+echo ""
+
+
+echo ""
 echo "✏️ check -n infra === "
 kubectl get all -n infra
 echo ""
