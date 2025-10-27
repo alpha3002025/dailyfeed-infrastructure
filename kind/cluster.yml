@@ -62,4 +62,5 @@ nodes:
         protocol: TCP
   - role: worker
   - role: worker
+  - role: worker
 # - role: worker ## 필요하다면 추가

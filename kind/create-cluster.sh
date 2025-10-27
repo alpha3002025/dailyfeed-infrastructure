@@ -16,6 +16,18 @@ kubectl wait --namespace ingress-nginx \
   --timeout=90s
 echo ""
 
+echo "=== 🔧 patch ingress-nginx controller resources"
+echo "[patch] applying resource limits to ingress-nginx-controller"
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx --patch-file=ingress-nginx-resource-patch.yaml
+echo ""
+
+echo "=== [wait] wait for ingress-nginx to be ready after patch"
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
+echo ""
+
 
 echo "=== 📇 create namespace 'dailyfeed'"
 kubectl create namespace dailyfeed
