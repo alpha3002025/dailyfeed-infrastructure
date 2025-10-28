@@ -18,6 +18,9 @@ spec:
         app.kubernetes.io/name: mongodb
         app.kubernetes.io/instance: mongodb
     spec:
+      # !!![docker hub pro]
+      # imagePullSecrets:
+      # - name: dockerhub-secret
       containers:
       - name: mongodb
         image: mongo:7.0
@@ -43,10 +46,10 @@ spec:
           mountPath: /docker-entrypoint-initdb.d
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "250m"
           limits:
-            memory: "512Mi"
+            memory: "1Gi"
             cpu: "500m"
       volumes:
       - name: mongodb-data
@@ -95,6 +98,9 @@ spec:
       labels:
         app.kubernetes.io/name: mongodb-init
     spec:
+      # !!![docker hub pro]
+      # imagePullSecrets:
+      # - name: dockerhub-secret
       restartPolicy: OnFailure
       containers:
       - name: mongodb-init
@@ -175,6 +181,9 @@ spec:
       labels:
         app.kubernetes.io/name: mongodb-init-users
     spec:
+      # !!![docker hub pro]
+      # imagePullSecrets:
+      # - name: dockerhub-secret
       restartPolicy: OnFailure
       containers:
       - name: mongodb-init-users

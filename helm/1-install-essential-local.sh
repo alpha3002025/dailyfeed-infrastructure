@@ -41,6 +41,11 @@ echo ""
 #kubectl port-forward -n infra svc/mysql 3306:3306 &
 
 echo ""
+echo "🔧 Patching CoreDNS resource limits"
+source patch-coredns-resources.sh
+echo ""
+
+echo ""
 echo "⛴️ create namespace 'dailyfeed' & istio-injection=enabled"
 kubectl create namespace dailyfeed
 kubectl label namespace dailyfeed istio-injection=enabled

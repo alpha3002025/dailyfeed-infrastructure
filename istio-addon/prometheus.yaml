@@ -509,6 +509,12 @@ spec:
             - name: config-volume
               mountPath: /etc/config
               readOnly: true
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
 
         - name: prometheus-server
           image: "prom/prometheus:v3.4.2"
@@ -548,6 +554,12 @@ spec:
             - name: storage-volume
               mountPath: /data
               subPath: ""
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
       dnsPolicy: ClusterFirst
       terminationGracePeriodSeconds: 300
       volumes:

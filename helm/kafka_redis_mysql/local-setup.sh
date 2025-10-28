@@ -1,6 +1,11 @@
 
 source create-namespace.sh
 
+echo " 🔐 docker pro credential setup"
+source setup-dockerhub-auth.sh
+echo ""
+
+
 echo " 📦 install redis"
 source install-redis.sh
 echo ""

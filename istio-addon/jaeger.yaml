@@ -48,8 +48,11 @@ spec:
             - name: data
               mountPath: /badger
           resources:
+            limits:
+              memory: 1Gi
             requests:
-              cpu: 10m
+              cpu: 100m
+              memory: 512Mi
       volumes:
         - name: data
           emptyDir: {}

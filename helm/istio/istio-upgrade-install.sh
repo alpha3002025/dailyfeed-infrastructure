@@ -25,7 +25,7 @@ echo ""
 
 ## istiod 설치
 echo "⛴️ istiod upgrade install"
-helm upgrade --install istiod istio/istiod --namespace istio-system --version 1.27.1 --set profile=demo --set pilot.resources.requests.memory=128Mi --set pilot.resources.requests.cpu=250m
+helm upgrade --install istiod istio/istiod --namespace istio-system --version 1.27.1 --set profile=demo --set pilot.resources.requests.memory=512Mi --set pilot.resources.limits.memory=1Gi --set pilot.resources.requests.cpu=250m
 echo ""
 
 
