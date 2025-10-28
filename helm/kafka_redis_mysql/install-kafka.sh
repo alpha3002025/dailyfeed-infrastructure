@@ -35,6 +35,9 @@ spec:
       labels:
         app: zookeeper
     spec:
+      # !!![docker hub pro]
+      # imagePullSecrets:
+      # - name: dockerhub-secret
       containers:
       - name: zookeeper
         image: confluentinc/cp-zookeeper:7.5.0
@@ -64,10 +67,10 @@ spec:
           value: "zookeeper-0.zookeeper.infra.svc.cluster.local:2888:3888;zookeeper-1.zookeeper.infra.svc.cluster.local:2888:3888;zookeeper-2.zookeeper.infra.svc.cluster.local:2888:3888"
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "250m"
           limits:
-            memory: "512Mi"
+            memory: "1Gi"
             cpu: "500m"
 EOF
 
@@ -120,6 +123,9 @@ spec:
       labels:
         app: kafka
     spec:
+      # !!![docker hub pro]
+      # imagePullSecrets:
+      # - name: dockerhub-secret
       containers:
       - name: kafka
         image: confluentinc/cp-kafka:7.5.0

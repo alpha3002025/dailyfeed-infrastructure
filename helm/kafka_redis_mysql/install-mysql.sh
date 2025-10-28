@@ -12,10 +12,12 @@ helm install mysql wso2/mysql \
   --set image="mysql" \
   --set imageTag="8.0" \
   --set persistence.enabled=false \
-  --set resources.requests.memory="256Mi" \
+  --set resources.requests.memory="512Mi" \
   --set resources.requests.cpu="250m" \
-  --set resources.limits.memory="512Mi" \
-  --set resources.limits.cpu="500m"
+  --set resources.limits.memory="1Gi" \
+  --set resources.limits.cpu="500m" 
+  # !!![docker hub pro]
+  # --set-string 'imagePullSecrets[0].name=dockerhub-secret'
 
 # MySQL Pod 상태 확인
 echo "Waiting for MySQL pod to be ready..."
