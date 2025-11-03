@@ -3,10 +3,11 @@ import boto3
 import sys
 
 def create_rds_free_tier(
-    db_instance_identifier='my-dev-db',
+    ## 초기 DB instance 이름 : my-dev-db, db 명: mydb
+    db_instance_identifier='dailyfeed-dev',
     master_username='admin',
-    master_password='YourSecurePassword123!',
-    db_name='mydb'
+    master_password='hitEnter###',
+    db_name='dailyfeed'
 ):
     """
     RDS 프리티어 인스턴스 생성
@@ -29,7 +30,7 @@ def create_rds_free_tier(
             
             # 엔진 선택
             Engine='mysql',
-            EngineVersion='8.0.35',
+            EngineVersion='8.0.43',  # AWS RDS에서 사용 가능한 최신 8.0.x 버전
             
             # 마스터 사용자 정보
             MasterUsername=master_username,
@@ -92,8 +93,8 @@ def create_rds_free_tier(
 
 if __name__ == '__main__':
     create_rds_free_tier(
-        db_instance_identifier='my-dev-db',
+        db_instance_identifier='dailyfeed-dev',
         master_username='admin',
-        master_password='ChangeThisPassword123!',
-        db_name='mydb'
+        master_password='hitEnter###',
+        db_name='dailyfeed'
     )

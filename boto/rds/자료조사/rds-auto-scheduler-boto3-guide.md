@@ -236,7 +236,7 @@ def create_rds_free_tier(
             
             # 엔진 선택
             Engine='mysql',
-            EngineVersion='8.0.35',
+            EngineVersion='8.0.43',
             
             # 마스터 사용자 정보
             MasterUsername=master_username,
@@ -305,6 +305,18 @@ if __name__ == '__main__':
         db_name='mydb'
     )
 ```
+
+
+
+확인
+
+```bash
+aws rds describe-db-instances --db-instance-identifier dailyfeed
+```
+
+<br/>
+
+
 
 ### 4-2. 보안 그룹 생성
 
@@ -421,7 +433,7 @@ def create_rds_with_security_group():
             DBInstanceIdentifier='my-dev-db',
             DBInstanceClass='db.t3.micro',
             Engine='mysql',
-            EngineVersion='8.0.35',
+            EngineVersion='8.0.43',
             MasterUsername='admin',
             MasterUserPassword='ChangeThisPassword123!',
             DBName='mydb',
@@ -1030,7 +1042,7 @@ class RDSSchedulerDeployer:
                 DBInstanceIdentifier=self.db_instance_id,
                 DBInstanceClass='db.t3.micro',
                 Engine='mysql',
-                EngineVersion='8.0.35',
+                EngineVersion='8.0.43',
                 MasterUsername='admin',
                 MasterUserPassword=master_password,
                 DBName='mydb',
