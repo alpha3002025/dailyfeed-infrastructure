@@ -4,6 +4,60 @@ import json
 import time
 import zipfile
 import os
+import pymysql
+
+def create_database_user(endpoint, master_username, master_password, db_name,
+                        new_username='dailyfeed', new_password='hitEnter###'):
+    """
+    RDS 인스턴스에 새로운 데이터베이스 사용자 생성
+    """
+    print(f"\n🔐 데이터베이스 사용자 확인 및 생성 중...")
+
+    try:
+        # MySQL 연결
+        connection = pymysql.connect(
+            host=endpoint,
+            user=master_username,
+            password=master_password,
+            database=db_name,
+            connect_timeout=10
+        )
+
+        with connection.cursor() as cursor:
+            # 사용자 존재 여부 확인
+            cursor.execute(f"SELECT User FROM mysql.user WHERE User = '{new_username}' AND Host = '%'")
+            user_exists = cursor.fetchone()
+
+            if user_exists:
+                print(f"ℹ️  사용자가 이미 존재합니다: {new_username}")
+            else:
+                # 사용자 생성
+                cursor.execute(f"CREATE USER '{new_username}'@'%' IDENTIFIED BY '{new_password}'")
+                print(f"✅ 사용자 생성: {new_username}")
+
+            # 권한 부여 (모든 권한)
+            cursor.execute(f"GRANT ALL PRIVILEGES ON {db_name}.* TO '{new_username}'@'%'")
+            print(f"✅ 권한 부여: {db_name} 데이터베이스에 대한 모든 권한")
+
+            # 권한 적용
+            cursor.execute("FLUSH PRIVILEGES")
+            print(f"✅ 권한 적용 완료")
+
+        connection.commit()
+        connection.close()
+
+        print(f"\n📊 사용자 정보:")
+        print(f"   사용자명: {new_username}")
+        print(f"   비밀번호: {new_password}")
+        print(f"   데이터베이스: {db_name}")
+        print(f"   엔드포인트: {endpoint}")
+
+    except pymysql.MySQLError as e:
+        print(f"❌ 사용자 생성 실패: {str(e)}")
+        print(f"   수동으로 사용자를 생성해야 할 수 있습니다.")
+    except Exception as e:
+        print(f"❌ 연결 오류: {str(e)}")
+        print(f"   보안 그룹 설정을 확인하세요.")
 
 class RDSSchedulerDeployer:
     def __init__(self, db_instance_id='dailyfeed-dev', db_name='dailyfeed', region='ap-northeast-2'):
@@ -77,6 +131,23 @@ class RDSSchedulerDeployer:
             )
             print(f"✅ RDS 생성 시작: {self.db_instance_id}")
             print("   ⏳ 5-10분 후 사용 가능")
+
+            # RDS 인스턴스가 사용 가능해질 때까지 대기
+            print(f"\n⏳ RDS 인스턴스가 사용 가능해질 때까지 대기 중...")
+            waiter = self.rds.get_waiter('db_instance_available')
+            waiter.wait(
+                DBInstanceIdentifier=self.db_instance_id,
+                WaiterConfig={'Delay': 30, 'MaxAttempts': 40}
+            )
+
+            # 엔드포인트 가져오기
+            db_response = self.rds.describe_db_instances(DBInstanceIdentifier=self.db_instance_id)
+            endpoint = db_response['DBInstances'][0]['Endpoint']['Address']
+            print(f"✅ RDS 인스턴스 사용 가능: {endpoint}")
+
+            # 데이터베이스 사용자 생성
+            create_database_user(endpoint, 'admin', master_password, self.db_name)
+
         except self.rds.exceptions.DBInstanceAlreadyExistsFault:
             print(f"ℹ️  RDS 이미 존재: {self.db_instance_id}")
     
