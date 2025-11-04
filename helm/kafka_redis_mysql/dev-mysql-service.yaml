@@ -5,5 +5,9 @@ metadata:
   namespace: infra
 spec:
   type: ExternalName
-  externalName: [rds url]
-  ## rds와 eks 를 시큐리티 그룹으로 묶어서 rds 로 오는 요청은 허용된 곳에서만 요청을 받을수 있도록 설정해야 함
+  externalName: dailyfeed-dev.c7muo0wa2dr1.ap-northeast-2.rds.amazonaws.com
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+  ## rds와 kind 클러스터의 보안 그룹 설정 필요 (dev 환경의 경우 로컬 IP 허용)

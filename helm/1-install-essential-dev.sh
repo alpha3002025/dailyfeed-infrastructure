@@ -1,44 +1,88 @@
 echo "🖨️🖨️🖨️  create namespace 'dailyfeed'"
-## configmap, secret
 kubectl create ns dailyfeed
 echo ""
 
 
-## infra
-echo " 🖨️🖨️🖨️  create namespace 'infra'"
+echo "🖨️🖨️🖨️  create namespace 'infra'"
 kubectl create ns infra
 echo ""
 
 
 ## install configmap, secret
-echo " 🔑🔑🔑 create configmaps, secrets"
+echo "🔑🔑🔑 create configmaps, secrets"
 cd manifests/dev
 kubectl apply -f .
 cd ../..
 echo ""
 
 
-## install kafka, redis, mongodb
-echo " 📦📦📦 install kafka, redis, mysql"
+## install kafka, redis (dev 환경에서는 MySQL, MongoDB는 외부 서비스 사용)
+echo "📦📦📦 install kafka, redis"
 cd kafka_redis_mysql
 source dev-setup.sh
 cd ..
 echo ""
 
-## networking
-echo " 🛜🛜🛜 install services"
+
+## networking - ExternalName Services for MySQL RDS and MongoDB Atlas
+echo "🛜🛜🛜 install external services (MySQL RDS, MongoDB Atlas)"
 kubectl apply -n infra -f kafka_redis_mysql/dev-mysql-service.yaml
+kubectl apply -n infra -f kafka_redis_mysql/dev-mongodb-service.yaml
 kubectl apply -n infra -f kafka_redis_mysql/dev-redis-service.yaml
-## ExternerService 로 대체 예정
-# kubectl apply -n infra -f kafka_redis_mysql/dev-mongodb-service.yaml
+echo ""
 
-#echo "wait 60s (mysql pending) "
-#sleep 60
-#
-### fort-forwarding
-#echo "port-forward -n infra svc/mysql 3306:3306 &"
-#kubectl port-forward -n infra svc/mysql 3306:3306 &
 
-echo "⛴️ create namespace 'dailyfeed' & istio-injection=enabled"
-kubectl create namespace dailyfeed
-kubectl label namespace istio-injection=enabled
+echo ""
+echo "🔧 Patching CoreDNS resource limits"
+source patch-coredns-resources.sh
+echo ""
+
+
+echo ""
+echo "⛴️ label namespace 'dailyfeed' with istio-injection=enabled"
+kubectl label namespace dailyfeed istio-injection=enabled --overwrite
+echo ""
+
+
+echo ""
+echo "✏️ check -n dailyfeed"
+kubectl get all -n dailyfeed
+echo ""
+
+
+echo ""
+echo "⛴️ install istio"
+cd istio
+source istio-upgrade-install.sh
+cd ..
+echo ""
+
+
+echo ""
+echo "📊 install metrics-server for HPA"
+source install-metrics-server.sh
+echo ""
+
+
+echo ""
+echo "✏️ check -n infra"
+kubectl get all -n infra
+echo ""
+
+
+echo ""
+echo "✏️ check -n dailyfeed"
+kubectl get all -n dailyfeed
+echo ""
+
+
+echo ""
+echo "✏️ check -n istio-system"
+kubectl get all -n istio-system
+echo ""
+
+
+echo ""
+echo "✏️ check -n istio-ingress"
+kubectl get pods -n istio-ingress
+echo ""

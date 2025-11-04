@@ -10,14 +10,12 @@ source install-kafka.sh
 echo ""
 
 
-echo " 📦 install mysql"
-source install-mysql.sh
+echo " ℹ️  MySQL: Using RDS (dailyfeed-dev.c7muo0wa2dr1.ap-northeast-2.rds.amazonaws.com)"
+echo " 🔗 Creating ExternalName Service for MySQL RDS..."
+kubectl apply -f dev-mysql-service.yaml
 echo ""
 
-
-## atlas mongodb
-# echo " 📦 install mongodb"
-# #source install-mongodb.sh
-# kubectl apply -f local-mongodb-deployment.yaml
-# echo ""
+echo " ℹ️  MongoDB: Using Atlas (alpha300.sz30zco.mongodb.net)"
+echo " 🔗 Creating ExternalName Service for MongoDB Atlas..."
+kubectl apply -f dev-mongodb-service.yaml
 echo ""
