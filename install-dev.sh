@@ -64,10 +64,14 @@ echo ""
 
 echo "🛜🛜🛜 install prometheus"
 kubectl apply -f prometheus.yaml
+echo ""
+
+echo "🛜🛜🛜 install grafana"
+kubectl apply -f grafana.yaml
 cd ..
 echo ""
 
-echo "🔌 install Kiali, Jaeger, Prometheus NodePort"
+echo "🔌 install Kiali, Jaeger, Prometheus, Grafana NodePort"
 cd istio-addon/nodeport
 kubectl apply -f .
 echo ""
