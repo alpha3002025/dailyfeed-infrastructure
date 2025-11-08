@@ -26,6 +26,7 @@ source local-setup.sh
 cd ..
 echo ""
 
+
 ## networking
 echo " 🛜🛜🛜 install services"
 kubectl apply -n infra -f kafka_redis_mysql/local-mysql-service.yaml
@@ -39,11 +40,6 @@ echo ""
 ### fort-forwarding
 #echo "port-forward -n infra svc/mysql 3306:3306 &"
 #kubectl port-forward -n infra svc/mysql 3306:3306 &
-
-echo ""
-echo "🔧 Patching CoreDNS resource limits"
-source patch-coredns-resources.sh
-echo ""
 
 echo ""
 echo "⛴️ create namespace 'dailyfeed' & istio-injection=enabled"

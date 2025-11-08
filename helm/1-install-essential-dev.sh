@@ -33,12 +33,6 @@ echo ""
 
 
 echo ""
-echo "🔧 Patching CoreDNS resource limits"
-source patch-coredns-resources.sh
-echo ""
-
-
-echo ""
 echo "⛴️ label namespace 'dailyfeed' with istio-injection=enabled"
 kubectl label namespace dailyfeed istio-injection=enabled --overwrite
 echo ""

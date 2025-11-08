@@ -5,6 +5,8 @@ echo "Infrastructure: Docker Compose"
 echo "Applications: Kubernetes (Kind)"
 echo ""
 
+
+###
 echo "=== Step 1: Start Docker Compose Infrastructure ==="
 cd docker/mysql-mongodb-redis
 echo "Starting MySQL, MongoDB, Kafka, Redis via Docker Compose..."
@@ -25,6 +27,8 @@ echo ""
 
 cd ../..
 
+
+###
 echo "=== Step 2: Create Kind Cluster (Lightweight) ==="
 cd kind
 echo "[create] cluster creating with hybrid configuration..."
@@ -40,13 +44,15 @@ echo "=== [wait] wait ingress-nginx namespace to be created"
 kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/ingress-nginx --timeout=30s
 echo ""
 
-echo "=== 🔧 replace ingress-nginx controller with hostPort configuration"
-echo "[delete] removing default ingress-nginx-controller deployment"
-kubectl delete deployment ingress-nginx-controller -n ingress-nginx --ignore-not-found=true
+echo ""
+echo "=== ⛴️ create namespace 'dailyfeed' & istio-injection=enabled"
+kubectl create namespace dailyfeed --dry-run=client -o yaml | kubectl apply -f -
+kubectl label namespace dailyfeed istio-injection=enabled --overwrite
 echo ""
 
-echo "[create] applying hostPort-enabled ingress-nginx-controller"
-kubectl apply -f ingress-nginx-hostport.yaml
+echo "=== 🔧 patch ingress-nginx controller with hostPort configuration"
+echo "[patch] applying hostPort and resource configuration"
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx --patch-file ingress-nginx-hostport-patch.yaml
 echo ""
 
 echo "=== [wait] wait for ingress-nginx to be ready with hostPort"
@@ -55,17 +61,23 @@ kubectl wait --namespace ingress-nginx \
   --selector=app.kubernetes.io/component=controller \
   --timeout=90s
 echo ""
-
-echo ""
-echo "=== 📇 create namespace 'dailyfeed'"
-kubectl create namespace dailyfeed
-echo ""
-
 cd ..
 
+
+echo ""
+echo "🔧 Patching Control Plane resource limits"
+cd k8s
+source patch-control-plane-simple.sh
+echo ""
+
+echo "🔧 Patching CoreDNS resource limits"
+source patch-coredns-resources.sh
+cd ..
+echo ""
+
+
+###
 echo "=== Step 3: Setup Kubernetes Resources (ConfigMaps, Secrets) ==="
-echo "🖨️🖨️🖨️  create namespace 'dailyfeed'"
-kubectl create ns dailyfeed --dry-run=client -o yaml | kubectl apply -f -
 echo ""
 
 echo " 🔑🔑🔑 create configmaps, secrets (pointing to Docker Compose infrastructure)"
@@ -74,7 +86,9 @@ kubectl apply -f .
 cd ../../..
 echo ""
 
-echo "=== 🛜 create Nodeport services for debugging"
+
+###
+echo "=== Step 4 : 🛜 create Nodeport services for debugging"
 echo "=== 🛜 create Nodeport 'dailyfeed-member-debug-svc'"
 kubectl apply -f kind/nodeport/dailyfeed-member-debug-svc.yaml
 echo ""
@@ -104,16 +118,20 @@ kubectl apply -f kind/sc/storageclass.yaml
 echo ""
 
 echo ""
-echo "🔧 Patching CoreDNS resource limits"
-cd helm
-source patch-coredns-resources.sh
-cd ..
-echo ""
+echo "🔍 Verifying Kubernetes cluster is fully ready before Istio installation..."
+RETRY_COUNT=0
+MAX_RETRIES=30
+until kubectl get nodes &>/dev/null && kubectl get --raw /healthz &>/dev/null || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+  echo "   Waiting for API server to be fully ready... ($((RETRY_COUNT+1))/$MAX_RETRIES)"
+  sleep 2
+  RETRY_COUNT=$((RETRY_COUNT+1))
+done
 
-echo ""
-echo "⛴️ create namespace 'dailyfeed' & istio-injection=enabled"
-kubectl create namespace dailyfeed --dry-run=client -o yaml | kubectl apply -f -
-kubectl label namespace dailyfeed istio-injection=enabled --overwrite
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+  echo "⚠️  Cluster may not be fully ready, but continuing..."
+else
+  echo "✅ Cluster is ready for Istio installation"
+fi
 echo ""
 
 echo ""

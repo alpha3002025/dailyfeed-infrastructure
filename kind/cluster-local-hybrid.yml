@@ -52,5 +52,6 @@ nodes:
         hostPort: 8893 # API 접속시 호스트 PC 의 8893 포트로 접속 (only 개발/debug 용도)
         protocol: TCP
   - role: worker
+  - role: worker
 # 하이브리드 구성: 인프라는 Docker Compose, 앱만 Kubernetes
 # Worker 노드를 1개로 축소하여 리소스 절약
