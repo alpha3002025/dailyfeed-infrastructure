@@ -8,7 +8,7 @@ echo ""
 
 ###
 echo "=== Step 1: Start Docker Compose Infrastructure ==="
-cd docker/mysql-mongodb-redis
+cd docker/local-hybrid
 echo "Starting MySQL, MongoDB, Kafka, Redis via Docker Compose..."
 docker-compose up -d
 echo ""
@@ -84,6 +84,20 @@ echo " 🔑🔑🔑 create configmaps, secrets (pointing to Docker Compose infra
 cd helm/manifests/local
 kubectl apply -f .
 cd ../../..
+echo ""
+
+echo "=== Step 3.5: Initialize JWT Primary Key ==="
+echo ""
+echo "🔑 Initializing JWT primary key in database..."
+cd scripts
+source init-jwt-key.sh local  # Use local environment configuration
+if [ $? -eq 0 ]; then
+    echo "✅ JWT key initialization completed successfully"
+else
+    echo "⚠️  JWT key initialization failed, but continuing..."
+    echo "   The application will create a key on startup, but may have race conditions with multiple replicas"
+fi
+cd ..
 echo ""
 
 
@@ -188,12 +202,9 @@ echo "  - MongoDB:  localhost:27017"
 echo "  - Redis:    localhost:26379"
 echo "  - Kafka:    localhost:29092"
 echo ""
-echo "Kubernetes Cluster (Kind): istio-cluster"
-echo "  - Control Plane: 1 node"
-echo "  - Worker: 1 node"
 echo ""
 echo "Next steps:"
 echo "  1. Deploy applications: cd ../dailyfeed-app-helm && source install-local.sh <version>"
-echo "  2. Check infrastructure: docker-compose -f docker/mysql-mongodb-redis/docker-compose.yaml ps"
+echo "  2. Check infrastructure: docker-compose -f docker/local-hybrid/docker-compose.yaml ps"
 echo "  3. Check Kubernetes: kubectl get all -n dailyfeed"
 echo ""

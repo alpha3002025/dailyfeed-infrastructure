@@ -8,7 +8,7 @@ kind delete cluster --name istio-cluster
 echo ""
 
 echo "=== Step 2: Stop Docker Compose Infrastructure ==="
-cd docker/mysql-mongodb-redis
+cd docker/local-hybrid
 docker-compose down -v
 echo ""
 

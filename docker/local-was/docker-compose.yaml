@@ -1,0 +1,438 @@
+services:
+  # MySQL Database
+  mysql-dailyfeed:
+    image: mysql:8.0.38-debian
+    platform: linux/amd64  # ARM64 호환성을 위한 플랫폼 지정
+    restart: always
+    container_name: mysql-dailyfeed
+    hostname: mysql-dailyfeed
+    ports:
+      - "23306:3306"
+    environment:
+      - MYSQL_USER=dailyfeed
+      - MYSQL_USER_HOST=%
+      - MYSQL_PASSWORD=hitEnter###
+      - MYSQL_DATABASE=dailyfeed
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=hitEnter###
+      - TZ=UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./init/ddl.sql:/docker-entrypoint-initdb.d/01-ddl.sql
+      - ./init/02-batch-schema.sql:/docker-entrypoint-initdb.d/02-batch-schema.sql
+    networks:
+      - dailyfeed-network
+
+  # MongoDB Replica Set Primary
+  mongo-dailyfeed-1:
+    image: mongo:7.0
+    container_name: mongo-dailyfeed-1
+    hostname: mongo-dailyfeed-1
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-dailyfeed-1-data:/data/db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - dailyfeed-network
+
+  # MongoDB Replica Set Secondary 1
+  mongo-dailyfeed-2:
+    image: mongo:7.0
+    container_name: mongo-dailyfeed-2
+    hostname: mongo-dailyfeed-2
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-dailyfeed-2-data:/data/db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - dailyfeed-network
+
+  # MongoDB Replica Set Secondary 2
+  mongo-dailyfeed-3:
+    image: mongo:7.0
+    container_name: mongo-dailyfeed-3
+    hostname: mongo-dailyfeed-3
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo-dailyfeed-3-data:/data/db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - dailyfeed-network
+
+  # MongoDB Replica Set Initializer
+  mongo-init:
+    image: mongo:7.0
+    container_name: mongo-init
+    depends_on:
+      - mongo-dailyfeed-1
+      - mongo-dailyfeed-2
+      - mongo-dailyfeed-3
+    networks:
+      - dailyfeed-network
+    entrypoint: ["/bin/bash", "-c"]
+    command: |
+      "
+      echo 'Waiting for MongoDB instances to be ready...'
+      sleep 15
+
+      echo 'Initializing replica set...'
+      mongosh --host mongo-dailyfeed-1:27017 --eval '
+        try {
+          rs.status();
+          print(\"Replica set already initialized\");
+        } catch (e) {
+          print(\"Initializing new replica set...\");
+          rs.initiate({
+            _id: \"rs0\",
+            members: [
+              { _id: 0, host: \"mongo-dailyfeed-1:27017\", priority: 2 },
+              { _id: 1, host: \"mongo-dailyfeed-2:27017\", priority: 1 },
+              { _id: 2, host: \"mongo-dailyfeed-3:27017\", priority: 1 }
+            ]
+          });
+        }
+      '
+
+      echo 'Waiting for replica set to become ready...'
+      sleep 10
+
+      echo 'Skipping user creation for local development...'
+
+      echo 'Verifying replica set status...'
+      mongosh --host mongo-dailyfeed-1:27017 --eval 'rs.status()'
+
+      echo 'MongoDB Replica Set initialization completed!'
+      "
+
+  # Zookeeper for Kafka Cluster
+  zookeeper-dailyfeed:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper-dailyfeed
+    hostname: zookeeper-dailyfeed
+    restart: always
+    ports:
+      - "22181:2181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    networks:
+      - dailyfeed-network
+
+  # Kafka Broker 1
+  kafka-1:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-1
+    hostname: kafka-1
+    restart: always
+    depends_on:
+      - zookeeper-dailyfeed
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-dailyfeed:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # Replication 설정
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Producer ACK=1을 위한 설정
+      KAFKA_REQUEST_REQUIRED_ACKS: 1
+      # 기타 설정
+#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false' ## TODO (SEASON2 - spring batch (23:00 에 다음날짜 topic 생성))
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_COMPRESSION_TYPE: 'snappy'
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+      KAFKA_AUTO_LEADER_REBALANCE_ENABLE: 'true'
+    volumes:
+      - kafka-1-data:/var/lib/kafka/data
+    networks:
+      - dailyfeed-network
+
+  # Kafka Broker 2
+  kafka-2:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-2
+    hostname: kafka-2
+    restart: always
+    depends_on:
+      - zookeeper-dailyfeed
+    ports:
+      - "29093:29093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-dailyfeed:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9092,EXTERNAL://localhost:29093
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # Replication 설정
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Producer ACK=1을 위한 설정
+      KAFKA_REQUEST_REQUIRED_ACKS: 1
+      # 기타 설정
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_COMPRESSION_TYPE: 'snappy'
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+      KAFKA_AUTO_LEADER_REBALANCE_ENABLE: 'true'
+    volumes:
+      - kafka-2-data:/var/lib/kafka/data
+    networks:
+      - dailyfeed-network
+
+  # Kafka Broker 3
+  kafka-3:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-3
+    hostname: kafka-3
+    restart: always
+    depends_on:
+      - zookeeper-dailyfeed
+    ports:
+      - "29094:29094"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-dailyfeed:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:9092,EXTERNAL://localhost:29094
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # Replication 설정
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Producer ACK=1을 위한 설정
+      KAFKA_REQUEST_REQUIRED_ACKS: 1
+      # 기타 설정
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_COMPRESSION_TYPE: 'snappy'
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+      KAFKA_AUTO_LEADER_REBALANCE_ENABLE: 'true'
+    volumes:
+      - kafka-3-data:/var/lib/kafka/data
+    networks:
+      - dailyfeed-network
+
+  # Kafka 토픽 초기화 (권장 설정 적용)
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-init-dailyfeed
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    entrypoint: ['/bin/sh', '-c']
+    command: |
+      "
+      echo 'Waiting for Kafka brokers to be ready...'
+      sleep 15
+      
+      # Broker 상태 확인
+      kafka-broker-api-versions --bootstrap-server kafka-1:9092
+      
+      # 기존 토픽 마이그레이션 (post-activity-20250907 -> post-activity)
+      echo 'Creating topic: post-activity with 6 partitions and RF=2'
+      kafka-topics --create --if-not-exists \
+        --topic post-activity \
+        --bootstrap-server kafka-1:9092 \
+        --partitions 6 \
+        --replication-factor 2 \
+        --config min.insync.replicas=1 \
+        --config compression.type=snappy \
+        --config retention.ms=604800000 \
+        --config segment.ms=86400000
+      
+      # 날짜별 토픽도 유지 (하위 호환성)
+      echo 'Creating topic: post-activity-20250907 with 6 partitions and RF=2'
+      kafka-topics --create --if-not-exists \
+        --topic post-activity-20250907 \
+        --bootstrap-server kafka-1:9092 \
+        --partitions 6 \
+        --replication-factor 2 \
+        --config min.insync.replicas=1 \
+        --config compression.type=snappy \
+        --config retention.ms=604800000
+      
+      echo 'Creating topic: user-activity with 6 partitions and RF=2'
+      kafka-topics --create --if-not-exists \
+        --topic user-activity \
+        --bootstrap-server kafka-1:9092 \
+        --partitions 6 \
+        --replication-factor 2 \
+        --config min.insync.replicas=1 \
+        --config compression.type=snappy \
+        --config retention.ms=259200000
+      
+      echo 'Creating topic: comment-activity with 6 partitions and RF=2'
+      kafka-topics --create --if-not-exists \
+        --topic comment-activity \
+        --bootstrap-server kafka-1:9092 \
+        --partitions 6 \
+        --replication-factor 2 \
+        --config min.insync.replicas=1 \
+        --config compression.type=snappy \
+        --config retention.ms=259200000
+      
+      # Dead Letter Queue 토픽 (에러 처리용)
+      echo 'Creating DLQ topics'
+      kafka-topics --create --if-not-exists \
+        --topic post-activity-dlq \
+        --bootstrap-server kafka-1:9092 \
+        --partitions 3 \
+        --replication-factor 2 \
+        --config retention.ms=2592000000
+      
+      kafka-topics --create --if-not-exists \
+        --topic user-activity-dlq \
+        --bootstrap-server kafka-1:9092 \
+        --partitions 3 \
+        --replication-factor 2 \
+        --config retention.ms=2592000000
+      
+      kafka-topics --create --if-not-exists \
+        --topic comment-activity-dlq \
+        --bootstrap-server kafka-1:9092 \
+        --partitions 3 \
+        --replication-factor 2 \
+        --config retention.ms=2592000000
+      
+      # 토픽 목록 확인
+      echo 'Listing all topics:'
+      kafka-topics --list --bootstrap-server kafka-1:9092
+      
+      # 토픽 상세 정보
+      echo 'Topic details:'
+      kafka-topics --describe --bootstrap-server kafka-1:9092
+      
+      echo 'Topic initialization completed!'
+      "
+    networks:
+      - dailyfeed-network
+
+  # Kafka UI (Kafka 클러스터 관리용)
+  kafka-ui-dailyfeed:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui-dailyfeed
+    hostname: kafka-ui-dailyfeed
+    restart: always
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+      - kafka-init
+    ports:
+      - "38080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: dailyfeed-cluster
+      # 3개 브로커 모두 등록
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper-dailyfeed:2181
+      KAFKA_CLUSTERS_0_READONLY: 'false'
+      # 메트릭 수집 활성화
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9090
+      KAFKA_CLUSTERS_0_JMXPORT: 9999
+    networks:
+      - dailyfeed-network
+
+  # Redis
+  redis-dailyfeed:
+    image: redis:7.0
+    command: redis-server --port 6379 --maxmemory 256mb --maxmemory-policy allkeys-lru
+    hostname: redis-dailyfeed
+    container_name: redis-dailyfeed
+    restart: always
+    ports:
+      - "26379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - dailyfeed-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Redis Commander (Redis 관리 UI)
+  redis-dailyfeed-commander:
+    image: rediscommander/redis-commander:latest
+    hostname: redis-commander
+    container_name: redis-commander
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis-dailyfeed:6379
+    ports:
+      - "38081:8081"
+    depends_on:
+      - redis-dailyfeed
+    networks:
+      - dailyfeed-network
+
+
+volumes:
+  # MongoDB 볼륨
+  mongo-dailyfeed-1-data:
+  mongo-dailyfeed-2-data:
+  mongo-dailyfeed-3-data:
+
+  # Kafka 관련 볼륨
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-1-data:
+  kafka-2-data:
+  kafka-3-data:
+
+  # Redis 볼륨
+  redis-data:
+
+networks:
+  mongo-cluster:
+    driver: bridge
+  dailyfeed-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

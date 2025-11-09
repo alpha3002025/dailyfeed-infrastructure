@@ -1,0 +1,2 @@
+# Python dependencies for DailyFeed infrastructure scripts
+pymysql>=1.0.0
