@@ -89,15 +89,15 @@ echo ""
 echo "=== Step 3.5: Initialize JWT Primary Key ==="
 echo ""
 echo "🔑 Initializing JWT primary key in database..."
-cd init
-source init-jwt-key.sh local  # Use local environment configuration
+cd init/jwt
+bash init-jwt-key.sh local  # Use local environment configuration
 if [ $? -eq 0 ]; then
     echo "✅ JWT key initialization completed successfully"
 else
     echo "⚠️  JWT key initialization failed, but continuing..."
     echo "   The application will create a key on startup, but may have race conditions with multiple replicas"
 fi
-cd ..
+cd ../..
 echo ""
 
 

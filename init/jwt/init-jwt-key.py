@@ -69,7 +69,7 @@ def connect_to_database(max_retries=5, retry_delay=3):
 def check_existing_primary_key(cursor):
     """Check if a primary key already exists"""
     query = """
-        SELECT key_id, is_primary, is_active, created_at, expires_at
+        SELECT id, key_id, secret_key, is_primary, is_active, created_at, updated_at, expires_at
         FROM jwt_keys
         WHERE is_primary = TRUE AND is_active = TRUE
         ORDER BY created_at DESC
@@ -93,14 +93,14 @@ def deactivate_all_primary_keys(cursor):
 def create_primary_key(cursor):
     """Create a new primary JWT key"""
     key_id = generate_key_id()
-    key_value = generate_secret_key()
+    secret_key = generate_secret_key()
     created_at = datetime.now()
     expires_at = created_at + timedelta(hours=KEY_ROTATION_HOURS + GRACE_PERIOD_HOURS)
 
     query = """
         INSERT INTO jwt_keys (
             key_id,
-            key_value,
+            secret_key,
             is_primary,
             is_active,
             created_at,
@@ -112,7 +112,7 @@ def create_primary_key(cursor):
 
     cursor.execute(query, (
         key_id,
-        key_value,
+        secret_key,
         True,   # is_primary
         True,   # is_active
         created_at,
