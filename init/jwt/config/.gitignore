@@ -3,5 +3,5 @@ dev.env
 prod.env
 staging.env
 *.env
-!*.env.example
+!dev.env.example
 !local.env
