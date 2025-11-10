@@ -4,6 +4,18 @@ source create-cluster.sh
 cd ..
 echo ""
 
+echo ""
+echo "🔧 Patching Control Plane resource limits"
+cd k8s
+source patch-control-plane-resources.sh
+echo ""
+
+echo "🔧 Patching CoreDNS resource limits"
+source patch-coredns-resources.sh
+cd ..
+echo ""
+
+
 echo "🛺🛺 install tasks in ./helm/** (dev profile) 😆😆"
 cd helm
 source 1-install-essential-dev.sh

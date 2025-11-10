@@ -1,0 +1,7 @@
+# Ignore actual environment files (keep only examples)
+dev.env
+prod.env
+staging.env
+*.env
+!dev.env.example
+!local.env

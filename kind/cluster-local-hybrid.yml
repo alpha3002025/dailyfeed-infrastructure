@@ -30,18 +30,6 @@ nodes:
       - containerPort: 32001 ## Test mTLS
         hostPort: 32001
         protocol: TCP
-      - containerPort: 30306 ## MySQL NodePort
-        hostPort: 3306
-        protocol: TCP
-      - containerPort: 30379 ## Redis NodePort
-        hostPort: 6379
-        protocol: TCP
-      - containerPort: 30017 ## MongoDB NodePort
-        hostPort: 27017
-        protocol: TCP
-      - containerPort: 9092 ## kafka
-        hostPort: 9092
-        protocol: TCP
       - containerPort: 80 # nginx-ingress 가 인식하는 포트
         hostPort: 80 # API 접속시 호스트 PC 의 80 포트로 접속
         protocol: TCP
@@ -65,5 +53,5 @@ nodes:
         protocol: TCP
   - role: worker
   - role: worker
-  # - role: worker
-# - role: worker ## 필요하다면 추가
+# 하이브리드 구성: 인프라는 Docker Compose, 앱만 Kubernetes
+# Worker 노드를 1개로 축소하여 리소스 절약

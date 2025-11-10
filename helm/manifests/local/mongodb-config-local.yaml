@@ -4,6 +4,6 @@ metadata:
   name: mongodb-config
   namespace: dailyfeed
 data:
-  MONGODB_HOST: "mongodb.infra.svc.cluster.local"
+  MONGODB_HOST: "host.docker.internal"
   MONGODB_PORT: "27017"
   MONGODB_DATABASE: "dailyfeed"
