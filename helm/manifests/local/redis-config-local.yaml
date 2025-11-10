@@ -4,5 +4,5 @@ metadata:
   name: redis-config
   namespace: dailyfeed
 data:
-  REDIS_HOST: "host.docker.internal"
-  REDIS_PORT: "26379"
+  REDIS_HOST: "redis-dailyfeed"
+  REDIS_PORT: "6379"

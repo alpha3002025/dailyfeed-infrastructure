@@ -1,7 +1,58 @@
+echo "🚀🚀🚀 Dev Environment Setup (Hybrid Mode) 🚀🚀🚀"
+echo "Infrastructure: Docker Compose (Redis, Kafka) + External (MySQL, MongoDB)"
+echo "Applications: Kubernetes (Kind)"
+echo ""
+
+
+###
+echo "=== Step 1: Start Docker Compose Infrastructure (Redis, Kafka) ==="
+cd docker/dev
+echo "Starting Redis and Kafka via Docker Compose..."
+docker-compose up -d
+echo ""
+
+echo "Waiting for infrastructure to be ready..."
+sleep 15
+echo ""
+
+echo "=== Checking Docker Compose services ==="
+docker-compose ps
+echo ""
+
+cd ../..
+
+
+###
+echo "=== Step 2: Create Kind Cluster ==="
 echo "🛺🛺 install kind cluster 😆😆"
 cd kind
 source create-cluster.sh
 cd ..
+echo ""
+
+echo ""
+echo "=== 🔗 Connecting Kind cluster to Docker Compose network ==="
+echo "This allows Kubernetes pods to directly access Docker Compose services"
+
+# Kind 클러스터의 컨테이너를 dailyfeed-network에 연결
+NETWORK_NAME="dev_dailyfeed-network"
+
+# Kind 컨트롤 플레인 노드 연결
+KIND_CONTROL_PLANE="istio-cluster-control-plane"
+if docker ps --format '{{.Names}}' | grep -q "^${KIND_CONTROL_PLANE}$"; then
+    echo "  → Connecting ${KIND_CONTROL_PLANE} to ${NETWORK_NAME}..."
+    docker network connect ${NETWORK_NAME} ${KIND_CONTROL_PLANE} 2>/dev/null || echo "  ✓ Already connected"
+else
+    echo "  ⚠️  ${KIND_CONTROL_PLANE} not found"
+fi
+
+# Kind 워커 노드들 연결 (있는 경우)
+for worker in $(docker ps --format '{{.Names}}' | grep "^istio-cluster-worker"); do
+    echo "  → Connecting ${worker} to ${NETWORK_NAME}..."
+    docker network connect ${NETWORK_NAME} ${worker} 2>/dev/null || echo "  ✓ Already connected"
+done
+
+echo "  ✅ Network connection completed"
 echo ""
 
 echo ""
@@ -48,11 +99,6 @@ kubectl apply -f kind/nodeport/dailyfeed-search-debug-svc.yaml
 echo ""
 
 
-echo "=== 🛜 create NodePort 'redis-nodeport' (dev: Redis만 로컬)"
-kubectl apply -f kind/nodeport/redis-nodeport.yaml
-echo ""
-
-
 echo "=== 🛜 create storageclass 'local-path'"
 kubectl apply -f kind/sc/storageclass.yaml
 echo ""
@@ -89,4 +135,19 @@ kubectl apply -f .
 echo ""
 cd ../..
 
+echo ""
+echo "✅✅✅ Dev Environment Setup Complete ✅✅✅"
+echo ""
+echo "Infrastructure (Docker Compose):"
+echo "  - Redis:    localhost:26379"
+echo "  - Kafka:    localhost:29092"
+echo ""
+echo "External Infrastructure (requires configuration):"
+echo "  - MySQL:    (configured via mysql-config/mysql-secret)"
+echo "  - MongoDB:  (configured via mongodb-config/mongodb-secret)"
+echo ""
+echo "Next steps:"
+echo "  1. Deploy applications: cd ../dailyfeed-app-helm && source install-dev.sh <version>"
+echo "  2. Check infrastructure: docker-compose -f docker/dev/docker-compose.yaml ps"
+echo "  3. Check Kubernetes: kubectl get all -n dailyfeed"
 echo ""

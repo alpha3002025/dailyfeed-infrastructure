@@ -4,5 +4,5 @@ metadata:
   name: redis-config
   namespace: dailyfeed
 data:
-  REDIS_HOST: redis-master.infra.svc.cluster.local
+  REDIS_HOST: "redis-dailyfeed"
   REDIS_PORT: "6379"
