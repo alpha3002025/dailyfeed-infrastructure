@@ -1,117 +1,4 @@
 services:
-  # MySQL Database
-  mysql-dailyfeed:
-    image: mysql:8.0.38-debian
-    platform: linux/amd64  # ARM64 호환성을 위한 플랫폼 지정
-    restart: always
-    container_name: mysql-dailyfeed
-    hostname: mysql-dailyfeed
-    ports:
-      - "23306:3306"
-    environment:
-      - MYSQL_USER=dailyfeed
-      - MYSQL_USER_HOST=%
-      - MYSQL_PASSWORD=hitEnter###
-      - MYSQL_DATABASE=dailyfeed
-      - MYSQL_ROOT_HOST=%
-      - MYSQL_ROOT_PASSWORD=hitEnter###
-      - TZ=UTC
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-    volumes:
-      - ./init/ddl.sql:/docker-entrypoint-initdb.d/01-ddl.sql
-      - ./init/02-batch-schema.sql:/docker-entrypoint-initdb.d/02-batch-schema.sql
-    networks:
-      - dailyfeed-network
-
-  # MongoDB Replica Set Primary
-  mongo-dailyfeed-1:
-    image: mongo:7.0
-    container_name: mongo-dailyfeed-1
-    hostname: mongo-dailyfeed-1
-    restart: always
-    command: mongod --replSet rs0 --bind_ip_all
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-dailyfeed-1-data:/data/db
-    networks:
-      - dailyfeed-network
-
-  # MongoDB Replica Set Secondary 1
-  mongo-dailyfeed-2:
-    image: mongo:7.0
-    container_name: mongo-dailyfeed-2
-    hostname: mongo-dailyfeed-2
-    restart: always
-    command: mongod --replSet rs0 --bind_ip_all
-    ports:
-      - "27018:27017"
-    volumes:
-      - mongo-dailyfeed-2-data:/data/db
-    networks:
-      - dailyfeed-network
-
-  # MongoDB Replica Set Secondary 2
-  mongo-dailyfeed-3:
-    image: mongo:7.0
-    container_name: mongo-dailyfeed-3
-    hostname: mongo-dailyfeed-3
-    restart: always
-    command: mongod --replSet rs0 --bind_ip_all
-    ports:
-      - "27019:27017"
-    volumes:
-      - mongo-dailyfeed-3-data:/data/db
-    networks:
-      - dailyfeed-network
-
-  # MongoDB Replica Set Initializer
-  mongo-init:
-    image: mongo:7.0
-    container_name: mongo-init
-    depends_on:
-      - mongo-dailyfeed-1
-      - mongo-dailyfeed-2
-      - mongo-dailyfeed-3
-    networks:
-      - dailyfeed-network
-    entrypoint: ["/bin/bash", "-c"]
-    command: |
-      "
-      echo 'Waiting for MongoDB instances to be ready...'
-      sleep 15
-
-      echo 'Initializing replica set...'
-      mongosh --host mongo-dailyfeed-1:27017 --eval '
-        try {
-          rs.status();
-          print(\"Replica set already initialized\");
-        } catch (e) {
-          print(\"Initializing new replica set...\");
-          rs.initiate({
-            _id: \"rs0\",
-            members: [
-              { _id: 0, host: \"mongo-dailyfeed-1:27017\", priority: 2 },
-              { _id: 1, host: \"mongo-dailyfeed-2:27017\", priority: 1 },
-              { _id: 2, host: \"mongo-dailyfeed-3:27017\", priority: 1 }
-            ]
-          });
-        }
-      '
-
-      echo 'Waiting for replica set to become ready...'
-      sleep 10
-
-      echo 'Skipping user creation for local development...'
-
-      echo 'Verifying replica set status...'
-      mongosh --host mongo-dailyfeed-1:27017 --eval 'rs.status()'
-
-      echo 'MongoDB Replica Set initialization completed!'
-      "
-
   # Zookeeper for Kafka Cluster
   zookeeper-dailyfeed:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -158,7 +45,6 @@ services:
       # Producer ACK=1을 위한 설정
       KAFKA_REQUEST_REQUIRED_ACKS: 1
       # 기타 설정
-#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false' ## TODO (SEASON2 - spring batch (23:00 에 다음날짜 topic 생성))
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_LOG_RETENTION_HOURS: 168
@@ -263,10 +149,10 @@ services:
       "
       echo 'Waiting for Kafka brokers to be ready...'
       sleep 15
-      
+
       # Broker 상태 확인
       kafka-broker-api-versions --bootstrap-server kafka-1:9092
-      
+
       # 기존 토픽 마이그레이션 (post-activity-20250907 -> post-activity)
       echo 'Creating topic: post-activity with 6 partitions and RF=2'
       kafka-topics --create --if-not-exists \
@@ -278,7 +164,7 @@ services:
         --config compression.type=snappy \
         --config retention.ms=604800000 \
         --config segment.ms=86400000
-      
+
       # 날짜별 토픽도 유지 (하위 호환성)
       echo 'Creating topic: post-activity-20250907 with 6 partitions and RF=2'
       kafka-topics --create --if-not-exists \
@@ -289,7 +175,7 @@ services:
         --config min.insync.replicas=1 \
         --config compression.type=snappy \
         --config retention.ms=604800000
-      
+
       echo 'Creating topic: user-activity with 6 partitions and RF=2'
       kafka-topics --create --if-not-exists \
         --topic user-activity \
@@ -299,7 +185,7 @@ services:
         --config min.insync.replicas=1 \
         --config compression.type=snappy \
         --config retention.ms=259200000
-      
+
       echo 'Creating topic: comment-activity with 6 partitions and RF=2'
       kafka-topics --create --if-not-exists \
         --topic comment-activity \
@@ -309,7 +195,7 @@ services:
         --config min.insync.replicas=1 \
         --config compression.type=snappy \
         --config retention.ms=259200000
-      
+
       # Dead Letter Queue 토픽 (에러 처리용)
       echo 'Creating DLQ topics'
       kafka-topics --create --if-not-exists \
@@ -318,29 +204,29 @@ services:
         --partitions 3 \
         --replication-factor 2 \
         --config retention.ms=2592000000
-      
+
       kafka-topics --create --if-not-exists \
         --topic user-activity-dlq \
         --bootstrap-server kafka-1:9092 \
         --partitions 3 \
         --replication-factor 2 \
         --config retention.ms=2592000000
-      
+
       kafka-topics --create --if-not-exists \
         --topic comment-activity-dlq \
         --bootstrap-server kafka-1:9092 \
         --partitions 3 \
         --replication-factor 2 \
         --config retention.ms=2592000000
-      
+
       # 토픽 목록 확인
       echo 'Listing all topics:'
       kafka-topics --list --bootstrap-server kafka-1:9092
-      
+
       # 토픽 상세 정보
       echo 'Topic details:'
       kafka-topics --describe --bootstrap-server kafka-1:9092
-      
+
       echo 'Topic initialization completed!'
       "
     networks:
@@ -407,11 +293,6 @@ services:
 
 
 volumes:
-  # MongoDB 볼륨
-  mongo-dailyfeed-1-data:
-  mongo-dailyfeed-2-data:
-  mongo-dailyfeed-3-data:
-
   # Kafka 관련 볼륨
   zookeeper-data:
   zookeeper-logs:
@@ -423,10 +304,8 @@ volumes:
   redis-data:
 
 networks:
-  mongo-cluster:
-    driver: bridge
   dailyfeed-network:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.25.0.0/16
+        - subnet: 172.26.0.0/16

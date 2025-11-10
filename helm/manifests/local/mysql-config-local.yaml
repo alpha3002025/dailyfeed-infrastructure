@@ -4,7 +4,7 @@ metadata:
   name: mysql-config
   namespace: dailyfeed
 data:
-  MYSQL_HOST: "host.docker.internal"
-  MYSQL_PORT: "23306"
+  MYSQL_HOST: "mysql-dailyfeed"
+  MYSQL_PORT: "3306"
   MYSQL_SCHEMA: "dailyfeed"
-  MYSQL_JDBC_URL: "jdbc:mysql://host.docker.internal:23306/dailyfeed?characterEncoding=UTF-8&serverTimezone=UTC&rewriteBatchedStatements=true"
+  MYSQL_JDBC_URL: "jdbc:mysql://mysql-dailyfeed:3306/dailyfeed?characterEncoding=UTF-8&serverTimezone=UTC&rewriteBatchedStatements=true"

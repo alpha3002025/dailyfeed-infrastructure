@@ -4,7 +4,7 @@ metadata:
   name: kafka-config
   namespace: dailyfeed
 data:
-  KAFKA_HOST: "host.docker.internal"
-  KAFKA_PORT: "29092"
+  KAFKA_HOST: "kafka-1"
+  KAFKA_PORT: "9092"
   KAFKA_SASL_MECHANISM: "PLAIN"
   KAFKA_SASL_PROTOCOL: "SASL_PLAINTEXT"

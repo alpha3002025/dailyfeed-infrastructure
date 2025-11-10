@@ -35,6 +35,31 @@ echo "[create] cluster creating with hybrid configuration..."
 kind create cluster --name istio-cluster --config=cluster-local-hybrid.yml
 
 echo ""
+echo "=== 🔗 Connecting Kind cluster to Docker Compose network ==="
+echo "This allows Kubernetes pods to directly access Docker Compose services"
+
+# Kind 클러스터의 컨테이너를 dailyfeed-network에 연결
+NETWORK_NAME="local-hybrid_dailyfeed-network"
+
+# Kind 컨트롤 플레인 노드 연결
+KIND_CONTROL_PLANE="istio-cluster-control-plane"
+if docker ps --format '{{.Names}}' | grep -q "^${KIND_CONTROL_PLANE}$"; then
+    echo "  → Connecting ${KIND_CONTROL_PLANE} to ${NETWORK_NAME}..."
+    docker network connect ${NETWORK_NAME} ${KIND_CONTROL_PLANE} 2>/dev/null || echo "  ✓ Already connected"
+else
+    echo "  ⚠️  ${KIND_CONTROL_PLANE} not found"
+fi
+
+# Kind 워커 노드들 연결 (있는 경우)
+for worker in $(docker ps --format '{{.Names}}' | grep "^istio-cluster-worker"); do
+    echo "  → Connecting ${worker} to ${NETWORK_NAME}..."
+    docker network connect ${NETWORK_NAME} ${worker} 2>/dev/null || echo "  ✓ Already connected"
+done
+
+echo "  ✅ Network connection completed"
+echo ""
+
+echo ""
 echo "=== ingress nginx 설치"
 echo "[create] create ingress-nginx namespace and resources"
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
