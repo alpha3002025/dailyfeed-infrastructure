@@ -1,0 +1,128 @@
+---
+# MySQL ServiceEntry
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mysql-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - mysql-dailyfeed
+  ports:
+  - number: 3306
+    name: mysql
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# MongoDB ServiceEntry (Replica Set) - Primary
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mongodb-1-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - mongo-dailyfeed-1
+  ports:
+  - number: 27017
+    name: mongodb
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# MongoDB ServiceEntry (Replica Set) - Secondary 1
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mongodb-2-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - mongo-dailyfeed-2
+  ports:
+  - number: 27017
+    name: mongodb
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# MongoDB ServiceEntry (Replica Set) - Secondary 2
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mongodb-3-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - mongo-dailyfeed-3
+  ports:
+  - number: 27017
+    name: mongodb
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# Redis ServiceEntry
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: redis-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - redis-dailyfeed
+  ports:
+  - number: 6379
+    name: redis
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# Kafka ServiceEntry - Broker 1
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: kafka-1-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - kafka-1
+  ports:
+  - number: 9092
+    name: kafka
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# Kafka ServiceEntry - Broker 2
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: kafka-2-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - kafka-2
+  ports:
+  - number: 9092
+    name: kafka
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# Kafka ServiceEntry - Broker 3
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: kafka-3-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - kafka-3
+  ports:
+  - number: 9092
+    name: kafka
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS

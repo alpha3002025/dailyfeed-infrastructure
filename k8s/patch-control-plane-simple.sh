@@ -9,7 +9,7 @@ CONTROL_PLANE_NODE=$(kubectl get nodes --selector=node-role.kubernetes.io/contro
 
 if [ -z "$CONTROL_PLANE_NODE" ]; then
   echo "❌ Control plane node not found"
-  exit 1
+  return 1
 fi
 
 echo "📍 Control plane node: $CONTROL_PLANE_NODE"
