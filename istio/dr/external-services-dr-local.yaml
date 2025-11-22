@@ -1,0 +1,94 @@
+---
+# MySQL DestinationRule
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mysql-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "mysql-dailyfeed"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# MongoDB DestinationRule (Replica Set 전체)
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mongodb-1-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "mongo-dailyfeed-1"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mongodb-2-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "mongo-dailyfeed-2"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mongodb-3-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "mongo-dailyfeed-3"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# Redis DestinationRule
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: redis-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "redis-dailyfeed"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# Kafka Broker 1 DestinationRule
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kafka-1-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "kafka-1"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# Kafka Broker 2 DestinationRule
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kafka-2-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "kafka-2"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# Kafka Broker 3 DestinationRule
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kafka-3-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "kafka-3"
+  trafficPolicy:
+    tls:
+      mode: DISABLE

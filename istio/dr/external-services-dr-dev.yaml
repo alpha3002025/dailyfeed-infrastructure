@@ -1,0 +1,70 @@
+---
+# Redis DestinationRule
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: redis-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "redis-dailyfeed"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# Kafka DestinationRules
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kafka-1-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "kafka-1"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kafka-2-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "kafka-2"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kafka-3-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "kafka-3"
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# MySQL (외부 DB - 호스트명 수정 필요)
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mysql-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "*.rds.amazonaws.com"  # RDS 사용 시
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+# MongoDB (외부 DB - 호스트명 수정 필요)
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mongodb-disable-mtls
+  namespace: dailyfeed
+spec:
+  host: "*.mongodb.net"  # Atlas 사용 시
+  trafficPolicy:
+    tls:
+      mode: DISABLE

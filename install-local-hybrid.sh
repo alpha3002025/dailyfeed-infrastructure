@@ -59,6 +59,51 @@ done
 echo "  ✅ Network connection completed"
 echo ""
 
+echo "=== 🔗 Connecting Docker Compose infrastructure to Kind network ==="
+echo "This allows bidirectional communication between Docker Compose and Kubernetes"
+
+# Docker Compose 인프라 컨테이너들을 Kind 네트워크에 연결
+KIND_NETWORK="kind"
+
+# Kafka 브로커들 연결
+for kafka in kafka-1 kafka-2 kafka-3; do
+    if docker ps --format '{{.Names}}' | grep -q "^${kafka}$"; then
+        echo "  → Connecting ${kafka} to ${KIND_NETWORK}..."
+        docker network connect ${KIND_NETWORK} ${kafka} 2>/dev/null || echo "  ✓ Already connected"
+    else
+        echo "  ⚠️  ${kafka} not found"
+    fi
+done
+
+# MongoDB 레플리카셋 연결
+for mongo in mongo-dailyfeed-1 mongo-dailyfeed-2 mongo-dailyfeed-3; do
+    if docker ps --format '{{.Names}}' | grep -q "^${mongo}$"; then
+        echo "  → Connecting ${mongo} to ${KIND_NETWORK}..."
+        docker network connect ${KIND_NETWORK} ${mongo} 2>/dev/null || echo "  ✓ Already connected"
+    else
+        echo "  ⚠️  ${mongo} not found"
+    fi
+done
+
+# Redis 연결
+if docker ps --format '{{.Names}}' | grep -q "^redis-dailyfeed$"; then
+    echo "  → Connecting redis-dailyfeed to ${KIND_NETWORK}..."
+    docker network connect ${KIND_NETWORK} redis-dailyfeed 2>/dev/null || echo "  ✓ Already connected"
+else
+    echo "  ⚠️  redis-dailyfeed not found"
+fi
+
+# MySQL 연결
+if docker ps --format '{{.Names}}' | grep -q "^mysql-dailyfeed$"; then
+    echo "  → Connecting mysql-dailyfeed to ${KIND_NETWORK}..."
+    docker network connect ${KIND_NETWORK} mysql-dailyfeed 2>/dev/null || echo "  ✓ Already connected"
+else
+    echo "  ⚠️  mysql-dailyfeed not found"
+fi
+
+echo "  ✅ Infrastructure network connection completed"
+echo ""
+
 echo ""
 echo "=== ingress nginx 설치"
 echo "[create] create ingress-nginx namespace and resources"
@@ -97,6 +142,10 @@ echo ""
 
 echo "🔧 Patching CoreDNS resource limits"
 source patch-coredns-resources.sh
+echo ""
+
+echo "🔧 Adding custom DNS entries for infrastructure services"
+source patch-coredns-custom-dns.sh
 cd ..
 echo ""
 
@@ -183,6 +232,18 @@ echo ""
 echo "🛺🛺 install istio ingress gateway, virtualservice 😆😆 "
 kubectl apply -f istio/ingress/gateway.yaml
 kubectl apply -f istio/ingress/virtualservice.yaml
+echo ""
+
+echo "📋 Apply ServiceEntry for external services (Local-Hybrid environment)"
+kubectl apply -f istio/se/external-services-se-local.yaml
+echo ""
+
+echo "📋 Apply DestinationRules for external services (Local-Hybrid environment)"
+kubectl apply -f istio/dr/external-services-dr-local.yaml
+echo ""
+
+echo "🔒 Apply PeerAuthentication STRICT policy"
+kubectl apply -f istio/pa/pa-local.yaml
 echo ""
 
 echo "🛺🛺 install istio addons 😆😆 "

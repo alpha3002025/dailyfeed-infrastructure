@@ -52,17 +52,49 @@ for worker in $(docker ps --format '{{.Names}}' | grep "^istio-cluster-worker");
     docker network connect ${NETWORK_NAME} ${worker} 2>/dev/null || echo "  ✓ Already connected"
 done
 
-echo "  ✅ Network connection completed"
+echo "  ✅ Kind nodes connected to Docker Compose network"
+echo ""
+
+echo ""
+echo "=== 🔗 Connecting Docker Compose infrastructure to Kind network ==="
+echo "This allows CoreDNS to resolve infrastructure service hostnames"
+echo ""
+
+KIND_NETWORK="kind"
+
+# Kafka 컨테이너들 연결
+for kafka in kafka-1 kafka-2 kafka-3; do
+    if docker ps --format '{{.Names}}' | grep -q "^${kafka}$"; then
+        echo "  → Connecting ${kafka} to ${KIND_NETWORK}..."
+        docker network connect ${KIND_NETWORK} ${kafka} 2>/dev/null || echo "  ✓ Already connected"
+    else
+        echo "  ⚠️  ${kafka} not found"
+    fi
+done
+
+# Redis 컨테이너 연결
+if docker ps --format '{{.Names}}' | grep -q "^redis-dailyfeed$"; then
+    echo "  → Connecting redis-dailyfeed to ${KIND_NETWORK}..."
+    docker network connect ${KIND_NETWORK} redis-dailyfeed 2>/dev/null || echo "  ✓ Already connected"
+else
+    echo "  ⚠️  redis-dailyfeed not found"
+fi
+
+echo "  ✅ Docker Compose containers connected to Kind network"
 echo ""
 
 echo ""
 echo "🔧 Patching Control Plane resource limits"
 cd k8s
-source patch-control-plane-resources.sh
+source patch-control-plane-simple.sh
 echo ""
 
 echo "🔧 Patching CoreDNS resource limits"
 source patch-coredns-resources.sh
+echo ""
+
+echo "🔧 Adding custom DNS entries for infrastructure services (Dev environment)"
+source patch-coredns-custom-dns-dev.sh
 cd ..
 echo ""
 
@@ -107,6 +139,19 @@ echo ""
 echo "🛺🛺 install istio ingress gateway, virtualservice 😆😆"
 kubectl apply -f istio/ingress/gateway.yaml
 kubectl apply -f istio/ingress/virtualservice.yaml
+echo ""
+
+
+echo "📋 Apply ServiceEntry for external services (Dev environment)"
+kubectl apply -f istio/se/external-services-se-dev.yaml
+echo ""
+
+echo "📋 Apply DestinationRules for external services (Dev environment)"
+kubectl apply -f istio/dr/external-services-dr-dev.yaml
+echo ""
+
+echo "🔒 Apply PeerAuthentication STRICT policy"
+kubectl apply -f istio/pa/pa-dev.yaml
 echo ""
 
 

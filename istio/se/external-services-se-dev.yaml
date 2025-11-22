@@ -1,0 +1,96 @@
+---
+# Redis ServiceEntry
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: redis-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - redis-dailyfeed
+  ports:
+  - number: 6379
+    name: redis
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# Kafka ServiceEntry - Broker 1
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: kafka-1-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - kafka-1
+  ports:
+  - number: 9092
+    name: kafka
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# Kafka ServiceEntry - Broker 2
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: kafka-2-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - kafka-2
+  ports:
+  - number: 9092
+    name: kafka
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# Kafka ServiceEntry - Broker 3
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: kafka-3-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - kafka-3
+  ports:
+  - number: 9092
+    name: kafka
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# MySQL ServiceEntry (AWS RDS)
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mysql-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - "dailyfeed-dev.c7muo0wa2dr1.ap-northeast-2.rds.amazonaws.com"
+  ports:
+  - number: 3306
+    name: mysql
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# MongoDB ServiceEntry (MongoDB Atlas)
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mongodb-external
+  namespace: dailyfeed
+spec:
+  hosts:
+  - "alpha300.sz30zco.mongodb.net"
+  ports:
+  - number: 27017
+    name: mongodb
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
